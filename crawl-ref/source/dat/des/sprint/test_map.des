@@ -1,4 +1,4 @@
-Name: Grassy_Plain
+Name: grassy_plain
 TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 DESC: A Grassy Plain
 ORDER: 10
@@ -6,14 +6,14 @@ ORIENT: encompass
 FTILE: g = floor_grass
 FTILE: d = floor_dirt
 MAP
-                                xxxxxxxxxxxxxxxxxxxxxxxxc
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxccccccccccccccccccccccccc
-xccccccccccccccccccccccccccccccxtttttttttttttgggggggggggc
-xcggggggggggggggggggggggggggggcxttgttttggttttgggggggggggc
-xcggggtgggggggggggggtgggggggggcxttttgttttttttgggggggggggc
-xcggggggggggggggggdddddddddddddddddddddddddddddddddddddddc
-xcgggggggTggggggggggggggggggggcxtttttttttttttccccccccccccc
-xcggggggggggggggggggggggggggggcxttttttttttttt
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxcccccccccccccccccccccccccx
+xccccccccccccccccccccccccccccccxtttttttttttttgggggggggggcx
+xcggggggggggggggggggggggggggggcxttgttttggttttgggggggggggcx
+xcggggtgggggggggggggtgggggggggcxttttgttttttttgggggggggggcx
+xcggggggggggggggggddddddddddddddddddddddddddddddddddddddcx
+xcgggggggTggggggggggggggggggggcxtttttttttttttccccccccccccx
+xcggggggggggggggggggggggggggggcxtttttttttttttxxxxxxxxxxxxx
 xcggggg{gggggggggggcccc+ccccggcxccccccccccccc
 xcgggggggggggggggggc.......cggcxxxxxxxxxxxxxx
 xcggggggtggggggggggc.......cggcx
