@@ -1,26 +1,73 @@
-Name: grassy_plain
+NAME: grassy_plain
 TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 DESC: A Grassy Plain
 ORDER: 10
 ORIENT: encompass
-FTILE: g = floor_grass
-FTILE: d = floor_dirt
+KMONS: A = 12-headed hydra
+KMONS: B = kobold
+KMONS: P = bat
+ITEM: any armour, any weapon
+FTILE: . = floor_grass
+FTILE: t = floor_grass
+FTILE: T = floor_grass
+FTILE: B = floor_grass
+FTILE: % = floor_grass
+FTILE: $ = floor_grass
+FTILE: A = floor_grass
+FTILE: * = floor_grass
+FTILE: d = floor_grass
+FTILE: e = floor_grass
+FTILE: P = floor_grass
+SUBVAULT: H : house
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxcccccccccccccccccccccccccx
-xccccccccccccccccccccccccccccccxtttttttttttttgggggggggggcx
-xcggggggggggggggggggggggggggggcxttgttttggttttgggggggggggcx
-xcggggtgggggggggggggtgggggggggcxttttgttttttttgggggggggggcx
-xcggggggggggggggggddddddddddddddddddddddddddddddddddddddcx
-xcgggggggTggggggggggggggggggggcxtttttttttttttccccccccccccx
-xcggggggggggggggggggggggggggggcxtttttttttttttxxxxxxxxxxxxx
-xcggggg{gggggggggggcccc+ccccggcxccccccccccccc
-xcgggggggggggggggggc.......cggcxxxxxxxxxxxxxx
-xcggggggtggggggggggc.......cggcx
-xcgggggggggggggggggc.......cggcx
-xcgggggggggggggggggc.......cggcx
-xcggggggggggtggggggcccccccccggcx
-xcggggggggggggggggggggggggggggcx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxccccccccccccccccccccccccccx
+xccccccccccccccccccccccccccccccctttt.tt$ttttt.$$$$......cx
+xc..................B....B....cxtt*..tt..tttt.......P...cx
+xc..t.t.....%.......t.........cctttt.ttt.tttt...........cx
+xcttt....t..............B........................P......cx
+xc.de....T....................cctttt.tttttttt...........cx
+xc........$...................cxtttt...P$tttt....P..||..cx
+xc.....{...........HHHHHHHHH..ccccccccccccccc...........cx
+xc.................HHHHHHHHH..cxxxxxxxxxxxxxcccccccccccccx
+xc......t..........HHHHHHHHH..cxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xc.................HHHHHHHHH..cx
+xcwwwwwwww.........HHHHHHHHH..cx
+xcwwwwwwww..t......HHHHHHHHH..cx
+xcwwwwwwwww........HHHHHHHHH..cx
+xcwwwwwwwww...................cx
+xcwwwwwwwww...................cx
+xc.wwwwwwww.............B.....cx
+xc............B...............cx
+xc..B.t..t....t...........*...cx
+xc....tt..t...................cx
+xc.....t.$$...................cx
+xc............................cx
+xcwwwwwww.....................cx
+xcwwwwwwwww...................cx
+xcwwwwwwwwwwww.........A.wwwwwcx
+xcwwwwwwwwwwwwwwwwwwwwwwwwwwwwcx
+xcwwwwwwwwwwwwwwwwwwwwwwwwwwwwcx
+xcwwwwwwwwwwwwwwwwwwwwwwwwwwwwcx
+xcwwwwwwwwwwwwwwwwwwwwwwwwwwwwcx
+xcwwwwwwwwwwwwwwwwwwwwwwwwwwwwcx
 xccccccccccccccccccccccccccccccx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: house_1
+TAGS: house no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KMONS: O = kobold name:Durwent_the_Legendary_Kobold name_replace
+KITEM: Z = Orb of Zot
+FTILE: . = floor_pebble_blue
+FTILE: Z = floor_pebble_blue
+FTILE: % = floor_pebble_blue
+MAP
+xxxx+xxxx
+x.......x
+x.......x
+x.......x
+x.Z..O..x
+x......%x
+xxxxxxxxx
 ENDMAP
