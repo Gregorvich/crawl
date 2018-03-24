@@ -2,16 +2,16 @@
 -- generation (SUBSTs, NSBUSTs, SHUFFLEs, etc).
 
 -- Name of the map!
-local map_to_test = ""
+local map_to_test = "grassy_plain"
 -- Which des file is the map in?
-local des_file = ""
+local des_file = "test_map.des"
 -- Change to true if the des file isn't specificed in dat/dlua/loadmaps.lua
 local need_to_load_des = false
 -- How many times should we generate?
 local checks = 10
 -- Output to this file, will append iteration to the end, ie,
 -- output_to.map.1, output_to.map.2, etc.
-local output_to = ""
+local output_to = "grassy_plain.map"
 
 -- Should we run these tests?
 local run_test = map_to_test ~= ""
