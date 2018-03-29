@@ -1,0 +1,283 @@
+#Utility
+
+#Maps
+NAME: Arena_1
+TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+DESC: An arena
+ORDER: 11
+ORIENT: encompass
+SUBVAULT: a : arena_ring
+SUBVAULT: b : barracks
+SUBVAULT: g : grassy_area
+SUBVAULT: m : training_area
+SUBVAULT: c : rocky_path
+SUBVAULT: e : entryway
+SUBVAULT: s : oasis
+SUBVAULT: f : frozen_lands
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+xxxxxxxxxxxxxxxxxxxxxxeeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+gggggggggggggggggggggggggggggggg
+ENDMAP
+
+NAME: Arena_Ring_1
+TAGS: arena_ring no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = floor_sand
+RTILE: x = wall_brick_brown
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxx
+xxxxxxx........xxxxxxx
+xxxx..............xxxx
+x....................x
+x....................x
+x.....................
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+xxxx..............xxxx
+xxxxxxx........xxxxxxx
+xxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Barracks_1
+TAGS: barracks no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = floor_cobble_blood
+RTILE: x = wall_brick_dark
+
+MAP
+xxxxxxxxxxxx
+x..........x
+x..........x
+x.......{..x
+...........x
+x..........x
+x..........x
+x..........x
+x..........x
+x..........x
+x..........x
+xxx..xxxxxxx
+ENDMAP
+
+NAME: Entryway_1
+TAGS: entryway no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KFEAT: r = .
+FTILE: . = floor_w_marble
+FTILE: r = floor_rough_blue
+RTILE: x = wall_brick_gray
+
+MAP
+xxx++xxx
+x..rr..x
+x..rr..x
+x..rr..x
+x..rr..x
+x..rr..x
+x..rr..x
+x..rr..x
+x..rr..x
+xxx++xxx
+ENDMAP
+
+NAME: Grassy_Area_1
+TAGS: grassy_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: r = x
+KFEAT: e = x
+KFEAT: f = .
+KFEAT: a = .
+KFEAT: b = .
+KFEAT: c = .
+KFEAT: d = .
+FTILE: . = floor_grass
+FTILE: t = floor_grass
+RTILE: r = wall_orc
+RTILE: e = wall_brick_yellow
+FTILE: f = floor_pebble_brown
+#FTILE: a = floor_n_grass
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxx..xxxxx
+xtttttttttttttttttttttttt..tttrr
+xt............................rr
+xt...eeeeeeee...................
+xt...effffffe...................
+xt...effffffe...................
+xt...effffffe.................rr
+xt...effffffe.................rr
+xt...effffffe.................rr
+xt...eeee+eee.................rr
+xt............................rr
+xt............................rr
+xt............................tx
+xt..eeee+eee..................tx
+xt..effffffe..................tx
+xt..effffffe..................tx
+xt..effffffe..................tx
+xt..effffffe..................tx
+xt..effffffe..................tx
+xt..effffffe..................tx
+xt..eeeeeeee..................tx
+xt............................tx
+xt............................tx
+xttttttttttttttttttttttttttttttx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Rocky_Path_1
+TAGS: rocky_path no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = floor_orc
+RTILE: x = wall_orc
+
+MAP
+xxxxxxxxxxxxxxxxxxx
+xxx.....x.........x
+xxx.....x.....xxxxx
+xxx..x.xx..xx.xx...
+.....x.....xx.xx.xx
+xxxxxxxxxxxxx....xx
+xxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Training_Area_1
+TAGS: training_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KFEAT: a = x
+KFEAT: f = .
+FTILE: . = floor_woodground
+FTILE: f = floor_pebble_brown
+RTILE: x = wall_orc
+RTILE: a = wall_church
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxx
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+x....................x
+.....................x
+x....................x
+x....................x
+x....aaaaa++aaaaa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....affffffffffa....x
+x....aaaaa++aaaaa....x
+x....................x
+x....................x
+.....................x
+.....................x
+.....................x
+x....................x
+x....................x
+xxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Oasis_1
+TAGS: oasis no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+FTILE: . = floor_moss
+RTILE: x = wall_orc
+#TILE: T = trees_mangrove
+
+MAP
+xxxxxx.xxxx
+xttttt.tttx
+xt.......tx
+xt.WWWWW.tx
+xt.WwwwW.tx
+xt.WwwwW..x
+xt.WWWWW..x
+xt.........
+xt........x
+xt........x
+xt........x
+xt........x
+x.........x
+x.........x
+xxxxxxxxxxx
+ENDMAP
+
+NAME: Frozen_lands_1
+TAGS: frozen_lands no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+
+MAP
+xxxxxxxxxxx
+x.........x
+x.........x
+x.........x
+x.........x
+x.........x
+x.........x
+xxxxxx.xxxx
+ENDMAP

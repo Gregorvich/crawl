@@ -1,0 +1,7 @@
+############################################################################
+# Some arrival maps for the main map. Player will start out here, so there #
+# will probably be only one of these                                       #
+############################################################################
+
+NAME: a_neat_arrival_map
+TAGS: arrival

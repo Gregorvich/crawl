@@ -1,0 +1,13 @@
+# A nicer keymap than the default
+
+# Movement
+bindkey = [w] CMD_MOVE_UP
+bindkey = [a] CMD_MOVE_LEFT
+bindkey = [d] CMD_MOVE_RIGHT
+bindkey = [s] CMD_MOVE_DOWN
+bindkey = [q] CMD_MOVE_UP_LEFT
+bindkey = [e] CMD_MOVE_UP_Right
+bindkey = [z] CMD_MOVE_DOWN_LEFT
+bindkey = [x] CMD_MOVE_DOWN_RIGHT
+
+bindkey = [1] CMD_USE_ABILITY

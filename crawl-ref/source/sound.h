@@ -13,7 +13,7 @@
  *************************************/
 
 // Uncomment to play sounds. winmm must be linked in if this is uncommented.
-// #define WINMM_PLAY_SOUNDS
+#define WINMM_PLAY_SOUNDS
 
 // Uncomment (and edit as appropriate) to play sounds.
 //

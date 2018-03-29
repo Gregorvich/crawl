@@ -54,6 +54,9 @@
 # Some useful, more advanced options, implemented in LUA.
 # include = advanced_optioneering.txt
 
+# Alternative binding that may be better than default
+# include = keybind_2.txt
+
 # Alternative vi bindings for Dvorak users.
 # include = dvorak_command_keys.txt
 
@@ -68,6 +71,8 @@
 
 # Turn the shift-vi keys into safe move, instead of run.
 # include = safe_move_shift.txt
+
+sound_file_path
 
 ##### Ancient versions ##############################################
 # If you're used to the interface of ancient versions of Crawl, you may

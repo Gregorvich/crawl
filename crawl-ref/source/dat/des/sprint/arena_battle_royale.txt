@@ -1,0 +1,134 @@
+# Utility functions
+
+# Maps
+NAME: Arena_1
+TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+DESC: An arena
+ORDER: 11
+ORIENT: encompass
+SUBVAULT: A : Arena_Ring
+SUBVAULT: B : Barracks
+SUBVAULT: C : Entryway
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxxxxxxxxxxxxxxxxxxxxxx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxCCCCCCCCCCCCCCCCCCCCCx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxCCCCCCCCCCCCCCCCCCCCCx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxCCCCCCCCCCCCCCCCCCCCCx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxCCCCCCCCCCCCCCCCCCCCCx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Arena_Ring_1
+TAGS: Arena_Ring no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxx......................xxxxxxxxxxxx
+xxxxxxxx..............................xxxxxxxx
+xxxxxx..................................xxxxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx..........................................
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxx......................................xxxx
+xxxxxx..................................xxxxxx
+xxxxxxxx..............................xxxxxxxx
+xxxxxxxxxxxx......................xxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: Barracks_1
+TAGS: Barracks no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+
+MAP
+xxxxxxxxxxxxxxxxxxxxx
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+...........{........x
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+....................x
+xxxxxxxxx...xxxxxxxxx
+ENDMAP
+
+NAME: Entryway_1
+TAGS: Entryway no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+DESC: The entryway
+KITEM: Z = Orb of Zot
+
+MAP
+xxxxxxxxx...xxxxxxxxx
+x...................x
+x...................x
+x...................x
+x...................x
+x...................x
+x...................x
+x......Z............x
+x...................x
+x...................x
+xxxxxxxxxxxxxxxxxxxxx
+ENDMAP
