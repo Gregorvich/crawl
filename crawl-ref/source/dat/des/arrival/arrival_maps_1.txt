@@ -4,4 +4,5 @@
 ############################################################################
 
 NAME: a_neat_arrival_map
-TAGS: arrival
+TAGS: arrival no_monster_gen
+PLACE:

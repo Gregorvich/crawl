@@ -668,3 +668,5 @@ vine_corner_NW VINE_OVERLAY_NW
 vine_corner_NE VINE_OVERLAY_NE
 vine_corner_SE VINE_OVERLAY_SE
 vine_corner_SW VINE_OVERLAY_SW
+
+%sdir dngn/npcs

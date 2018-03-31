@@ -14,6 +14,8 @@ SUBVAULT: c : rocky_path
 SUBVAULT: e : entryway
 SUBVAULT: s : oasis
 SUBVAULT: f : frozen_lands
+SUBVAULT: d : rocky_shore
+#SUBVAULT: e : rocky_shore_south
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
@@ -54,57 +56,62 @@ ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
 ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
 ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
 ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
-gggggggggggggggggggggggggggggggg
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd                            
 ENDMAP
 
 NAME: Arena_Ring_1
 TAGS: arena_ring no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KFEAT: a = m
 FTILE: . = floor_sand
 RTILE: x = wall_brick_brown
+TILE: a = wall_brick_brown
+MONS: kobold, big_kobold
+FTILE: 1 = floor_sand
+FTILE: 2 = floor_sand
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxx
-xxxxxxx........xxxxxxx
-xxxx..............xxxx
+xaaaaaa........aaaaaax
+xaaa..............aaax
 x....................x
-x....................x
+x.....1..............x
 x.....................
+x....1...............x
+x...1................x
+x........1...........x
+x....1...1...........x
 x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-xxxx..............xxxx
-xxxxxxx........xxxxxxx
+x.....1..............x
+xaaa..............aaax
+xaaaaaa........aaaaaax
 xxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME: Barracks_1
 TAGS: barracks no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 FTILE: . = floor_cobble_blood
-RTILE: x = wall_brick_dark
+RTILE: x = wall_catacombs
 
 MAP
 xxxxxxxxxxxx
 x..........x
 x..........x
-x.......{..x
+x......{...x
 ...........x
 x..........x
 x..........x
@@ -144,12 +151,13 @@ KFEAT: a = .
 KFEAT: b = .
 KFEAT: c = .
 KFEAT: d = .
+KFEAT: a = m
 FTILE: . = floor_grass
 FTILE: t = floor_grass
 RTILE: r = wall_orc
 RTILE: e = wall_brick_yellow
 FTILE: f = floor_pebble_brown
-#FTILE: a = floor_n_grass
+TILE: a = wall_brick_brown
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxx..xxxxx
@@ -159,15 +167,15 @@ xt...eeeeeeee...................
 xt...effffffe...................
 xt...effffffe...................
 xt...effffffe.................rr
-xt...effffffe.................rr
+xt...effffffe......m..........rr
 xt...effffffe.................rr
 xt...eeee+eee.................rr
 xt............................rr
 xt............................rr
 xt............................tx
-xt..eeee+eee..................tx
-xt..effffffe..................tx
-xt..effffffe..................tx
+xt..eeee+eee......aaaaa.......tx
+xt..effffffe......aaaaa.......tx
+xt..effffffe......aaaaa.......tx
 xt..effffffe..................tx
 xt..effffffe..................tx
 xt..effffffe..................tx
@@ -197,6 +205,7 @@ ENDMAP
 NAME: Training_Area_1
 TAGS: training_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 KFEAT: a = x
+KFEAT: b = x
 KFEAT: f = .
 FTILE: . = floor_woodground
 FTILE: f = floor_pebble_brown
@@ -241,7 +250,7 @@ x....................x
 .....................x
 x....................x
 x....................x
-xxxxxxxxxxxxxxxxxxxxxx
+xxxx..xxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME: Oasis_1
@@ -280,4 +289,28 @@ x.........x
 x.........x
 x.........x
 xxxxxx.xxxx
+ENDMAP
+
+NAME: Rocky_Shore_1
+TAGS: rocky_shore no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: s = .
+FTILE: s = floor_sand
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxx..xxxxxxxxxxxxxxxx
+x.........................wwwwwwwwwwwwwwx
+x.........................wwwwwwwwwwwwwwx
+x.........................wwwwwwwwwwwwwwx
+x........................wwwwwwwwwwwwwwwx
+x.....................wwwwwwwwwwwwwwwwwwx
+x............sssssswwwwwwwwwwwwwwwwwwwwwx
+x..........ssssWWwwwwwwwwwwwwwwwwwwwwwwwx
+x..........ssssWWwwwwwwwwwwwwwwwwwwwwwwwx
+x..........sssWWwwwwwwwwwwwwwwwwwwwwwwwwx
+x........sssWWWwwwwwwwwwwwwwwwwwwwwwwwwwx
+xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
+xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
+xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
+xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
