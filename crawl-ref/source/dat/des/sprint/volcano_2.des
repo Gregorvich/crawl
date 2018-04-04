@@ -1,0 +1,183 @@
+#Utility
+{{
+function make_fiery_armour (e, armour)
+    local armour_string = ""
+    for _, at in ipairs(armour) do
+        armour_string = armour_string .. " / " .. at .. " ego:fire_resistance ident:type good_item"
+    end
+    return string.gsub(armour_string, "%s*/$", "")
+end
+
+function make_fiery_weapon (e, weapon)
+    local weapon_string = ""
+    for _, wt in ipairs(weapon) do
+       weapon_string = weapon_string .. " / " .. wt .. " ego:flaming ident:type"
+    end
+    local n_weapon = string.gsub(weapon_string, "%s*/$", "")
+    e.item(n_weapon)
+end
+
+function setup_loot (e)
+    e.item(make_fiery_armour(e, {"leather armour w:65", "ring mail w:25",
+                                 "scale mail w:25", "chain mail w:40",
+                                 "plate armour w:25", "cloak w:11",
+                                 "large shield w:1", "shield w:2", "buckler w:1"}) ..
+                                 "pair of gloves good_item w:6 / helmet good_item w:4 / " ..
+                                 "hat good_item w:2 / pair of boots good_item w:6 / " ..
+                                 "fire dragon scales w:8")
+    e.item([[potion of berserk rage w:14 / potion of might w:5 /
+             potion of brilliance w:5 / potion of agility w:5 /
+             potion of experience q:1 w:1 / potion of resistance]])
+    e.item(make_fiery_weapon(e, {"rapier w:10", "quick blade w:5", "eveningstar w:2",
+                                 "demon whip w:2", "great mace w:16", "demon blade w:2",
+                                 "great sword w:16", "triple sword w:2", "broad axe w:3",
+                                 "battleaxe w:16", "executioner's axe w:1",
+                                 "demon trident w:2", "glaive w:16", "bardiche w:2",
+                                 "longbow w:8", "arbalest w:8", "fustibalus w:8",
+                                 "quarterstaff", "lajatang w:5"}))
+    e.item("any / star_item w:4")
+end
+
+function fiery_guardians (e, intelligent, village)
+    -- Shorthand abbreviations.
+    local flame = "ego:flaming ident:type"
+    local res = "ego:fire_resistance ident:type"
+    local magestuff = "spear " .. flame .. " | whip " .. flame
+                      .. " . robe " .. res
+    local goodgear = "scimitar " .. flame
+                     .. " | halberd " .. flame
+                     .. " | broad axe w:8 " .. flame
+                     .. " | flail " .. flame
+
+    -- Weighings back and forth with humanoids or not.
+    if crawl.x_chance_in_y(9, 20) or village or intelligent then
+        local ogrestuff = "great mace " .. flame .. " | giant club w:14 " .. flame
+        local centaurstuff = "shortbow " .. flame .. " . arrow"
+        if village then
+            e.mons("two-headed ogre ; " .. ogrestuff .. " . " .. ogrestuff ..
+                   " / centaur ; " .. centaurstuff ..
+                   " / salamander")
+            e.mons("fire bat / hell hound / hell hog w:2")
+            return
+        end
+        local set_weight = crawl.random2(3)
+        if set_weight < 1 then
+            e.mons("two-headed ogre ; " .. ogrestuff .. " . " .. ogrestuff)
+            e.mons("ogre mage w:40 ; " .. magestuff)
+        elseif set_weight < 2 then
+            e.mons("centaur ; " .. centaurstuff ..
+                   " / yaktaur w:5 ; arbalest " .. flame .. " . bolt")
+            e.mons("centaur warrior ; " .. centaurstuff)
+        else
+           e.mons("salamander")
+           e.mons("salamander mystic")
+        end
+        e.mons("hell knight ; " .. goodgear .. " . chain mail " .. res ..
+               " / red draconian ; " .. goodgear .. " . cloak")
+    else
+    -- Unintelligent map! Even more mixed.
+        local set_weight = crawl.random2(11)
+        if set_weight < 4 then
+            -- "Beastial" monster pack.
+            e.mons("hell hound / steam dragon w:8 / fire bat band w:8")
+            e.mons("hell hog / lindwurm w:12")
+            e.mons("fire crab w:12 / fire dragon")
+        elseif set_weight < 8 then
+            -- "Demonic" monster pack.
+            e.mons("hell hound / red ugly thing / " ..
+                   "red devil ; trident ego:flaming ident:type")
+            e.mons("sun demon / smoke demon")
+            e.mons("orc sorcerer ; " .. magestuff .. " / " ..
+                   "hell knight ; " .. goodgear .. " . chain mail " .. res)
+        else
+            -- "Elemental" monster pack.
+            e.mons("fire elemental w:12 / earth elemental / gargoyle w:8")
+            e.mons("efreet")
+            e.mons("stone giant")
+        end
+    end
+end
+
+function volcano_caves_collapse_doorways(data, triggerable, triggerer, marker, ev)
+    if triggerer.type ~= "turn" or triggerer.sub_type ~= "countdown" then
+        return
+    end
+
+    local x, y = marker:pos()
+    local you_x, you_y = you.pos()
+
+    if you_x == x and you_y == y then
+        crawl.mpr("There is a rumble as the volcano erupts. The roof shakes.", 
+                  "warning")
+        return
+    end
+
+    if you.see_cell(marker:pos()) then
+        crawl.mpr("The volcano erupts! Nearby, a roof collapses.", "warning")
+    else
+        crawl.mpr("There is a rumble as the volcano erupts. The roof shakes.", 
+                  "warning")
+    end
+    dgn.terrain_changed(x, y, "stone_wall", false)
+    dgn.colour_at(x, y, "lightred")
+    dgn.apply_area_cloud(x, y, 1, 6, 1, 10, "grey smoke", "other", -1)
+
+    triggerable:remove(marker)
+end
+}}
+
+#Maps
+NAME: volcano_caves_2
+TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_monster_gen
+DESC: Volcano caverns
+ORDER: 13
+ORIENT: encompass
+{{
+local collapse_marker = TriggerableFunction:new {
+    func = "volcano_caves_collapse_doorways",
+    repeated = true,
+    props = {
+        single_random_slave = "true"
+    }
+}
+
+collapse_marker:add_triggerer(DgnTriggerer: new {
+    type = "turn",
+    delay_min = 50,
+    delay_max = 200
+})
+
+lua_marker("M", Triggerable.synchronized_markers(collapse_marker))
+}}
+SUBST: Y = c., Z = c'
+SUBST: * = ddeeffhh$
+COLOUR: c = lightred
+: set_feature_name("stone_arch", "rock-blocked tunnel")
+#: fiery_guardians(_G)
+: setup_loot(_G)
+KPROP: 'defg$123 = no_tele_into
+KFEAT: ' = .
+MONS: bat
+MONS: orc
+MONS: Kobold
+MAP
+       cccc ccc
+     ccc''cccZcccccc
+    cccZccc<**'1ccZZccc
+    c''}ZZcc''ZccZ1''cc
+    ccc1**ZcZ'cc'**}cccc
+   cc'ccZ''ccMc'ZZ'ccZZcc
+  ccZ<ZccZ'MY.cMccccZ1}'c
+ ccZ121ZcccY...ccM''**ccc
+ccZ'****ccY....Y.cccccc
+cZ'''''ccY..A{....ccZZccc
+ccZ'''''M.....YcccM'**1Zcc
+ cccZ'cccMY..YMc1ccZ'**}3c
+   cccc''ccYccc'Z'cccZZccc
+    ccZ''ZccccZ'**'Zcccc
+   ccZ**'1}''cccZZ<Zcc
+    ccZ'Z'Zccc cccMcc
+     cccc'cc     ccc
+      ccccc
+ENDMAP
+

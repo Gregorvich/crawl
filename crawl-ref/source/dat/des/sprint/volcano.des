@@ -1,0 +1,145 @@
+#Utility
+{{
+function callback.convert_lava (data, triggerable, triggerer, marker, ev)
+    if triggerer.type ~= "turn" or triggerer.sub_type ~= "countdown" then
+        return
+    end
+
+    data.lava_phase = data.lava_phase + 1
+    local lp = data.lava_phase
+    local my_slaves = {}
+
+    local function convert_slaves_to_lava (mslaves, opposite)
+        local yp = dgn.point(you.pos())
+        for _, pos in ipairs(mslaves) do
+            if pos ~= yp then
+                if opposite then
+                    dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
+                else
+                    dgn.terrain_changed(pos.x, pos.y, "lava", false, false, false)
+                end
+            end
+        end
+    end
+
+    if lp == 1 then
+        crawl.mpr("The ground shudders ominously.", "warning")
+    elseif lp == 2 then
+        my_slaves = dgn.find_marker_positions_by_prop("lava_phase", 2)
+        crawl.mpr("In the distance, the volcano explodes with a roar! Lava spreads "
+                   .. "onto the path.", "warning")
+        convert_slaves_to_lava(my_slaves)
+    elseif lp == 3 then
+        crawl.mpr("The air is thick with the scent of sulphur.", "warning")
+    elseif lp == 4 then
+        my_slaves = dgn.find_marker_positions_by_prop("lava_phase", 4)
+        crawl.mpr("There is another distant roar. More lava overflows!", "warning")
+        convert_slaves_to_lava(my_slaves)
+    elseif lp == 5 then
+        crawl.mpr("The ground moves violently!", "warning")
+    elseif lp == 6 then
+        my_slaves = dgn.find_marker_positions_by_prop("lava_phase", 6)
+        crawl.mpr("The volcano erupts again! A thin layer of lava overflows to "
+                  .. "fill the cavern.", "warning")
+        convert_slaves_to_lava(my_slaves)
+    elseif lp == 7 then
+        my_slaves = dgn.find_marker_positions_by_prop("lava_phase", 6)
+        crawl.mpr("The ground shudders. Some of the lava has hardened enough to "
+                  .. "walk over!", "warning")
+        convert_slaves_to_lava(my_slaves, true)
+    end
+end
+
+function make_fiery_armour (e, armour)
+    local armour_string = ""
+    for _, at in ipairs(armour) do
+        armour_string = armour_string .. " / " .. at .. " ego:fire_resistance ident:type good_item"
+    end
+    return string.gsub(armour_string, "%s*/$", "")
+end
+
+function make_fiery_weapon (e, weapon)
+    local weapon_string = ""
+    for _, wt in ipairs(weapon) do
+       weapon_string = weapon_string .. " / " .. wt .. " ego:flaming ident:type"
+    end
+    local n_weapon = string.gsub(weapon_string, "%s*/$", "")
+    e.item(n_weapon)
+end
+
+function setup_loot (e)
+    e.item(make_fiery_armour(e, {"leather armour w:65", "ring mail w:25",
+                                 "scale mail w:25", "chain mail w:40",
+                                 "plate armour w:25", "cloak w:11",
+                                 "large shield w:1", "shield w:2", "buckler w:1"}) ..
+                                 "pair of gloves good_item w:6 / helmet good_item w:4 / " ..
+                                 "hat good_item w:2 / pair of boots good_item w:6 / " ..
+                                 "fire dragon scales w:8")
+    e.item([[potion of berserk rage w:14 / potion of might w:5 /
+             potion of brilliance w:5 / potion of agility w:5 /
+             potion of experience q:1 w:1 / potion of resistance]])
+    e.item(make_fiery_weapon(e, {"rapier w:10", "quick blade w:5", "eveningstar w:2",
+                                 "demon whip w:2", "great mace w:16", "demon blade w:2",
+                                 "great sword w:16", "triple sword w:2", "broad axe w:3",
+                                 "battleaxe w:16", "executioner's axe w:1",
+                                 "demon trident w:2", "glaive w:16", "bardiche w:2",
+                                 "longbow w:8", "arbalest w:8", "fustibalus w:8",
+                                 "quarterstaff", "lajatang w:5"}))
+    e.item("any / star_item w:4")
+end
+}}
+
+#Maps
+NAME: volcano_1
+TAGS: sprint no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_monster_gen
+DESC: A volcano
+ORDER: 12
+ORIENT: encompass
+MONS: orc, kobold
+{{
+lua_marker("A", portal_desc {lava_phase = 2})
+lua_marker("B", portal_desc {lava_phase = 4})
+lua_marker("C", portal_desc {lava_phase = 6})
+
+local sink_marker = TriggerableFunction:new {
+    func = "callback.convert_lava",
+    repeated = true,
+    data = {lava_phase = 0}
+}
+
+sink_marker:add_triggerer(DgnTriggerer:new {
+    type = "turn",
+    delay_min = 200,
+    delay_max = 400, })
+    
+lua_marker("M", sink_marker)
+}}
+SUBST: M = c
+KFEAT: A = .
+KFEAT: B = .
+KFEAT: C = .
+NSUBST: ABC = 6:d, 6:e / 3:f / 3:* / 6:g / 6:h / *:.
+NSUBST: 1 = 1:2 / *:1
+COLOUR: c = lightred
+: setup_loot(_G)
+
+MAP
+                xxxx         xxx xxx                   xxx
+        xxxxx  xx..xxx     xxx.xxx.xxxx xxxxx xxx     xx.xx
+       xx...xxxx.CC..xxx xxx..C.1.C...xxxx..xxx.xxx xxx.C.xx
+     xxx.CBB....CBBCC..xxx..CCBBCCBBCB....CC...C..xxx..CBC.xx
+   xxx..CBABCCCCBAABBB......BBAABBBABBBCCCCBCCBBCC...CCBBBC.xx
+ xxx..CBAAlABBBBAllAAABBBBBBAAllAAAlAAABBBBBBBBBBBCCCBAABC.xx
+xx.1CBAAllllAAAAllllllAAAAAAlllllllllllAAABBC...CBBAAlABC.xx
+ xx..CBAlllllllllllllllllllllllllllllllllABC.xxx..CBAllBC.xx
+  xxx.CBAlllllllllllllllllAAAlllllllllllABC.xxAxxx.CBlllBC.xx
+    xx.CBAlllAAllllllllAAABBBAAAlllllllABC.xx{...xx.CBAllBC.xx
+     xx.CBAlABBAllllllABCC...CCBAlllllllABC.xxx...xx.CAllABC.x
+      x.CBAABCCBAllllABCC.xxx.CBBAllllllABBC..x......CBllAAB.xx
+    xxx.CBAB...CBAAAABC..xx xx.CCBAllllAAABC.xx...xx.CBAAABC.xx
+   xx..CBB..xxx..CBBBC1xxx   xx..CBAAAABBC......xxx.CCBBBC.1xx
+   x..CC..xxx xxx..C..xx      xxx..CBBBC..xxxxxxx xx..CC..xxx
+   xxx..xxx     xxx.xxx    M    xxx..C..xxx        xxx..xxx
+     xxxx         xxx             xxx.xxx            xxxx
+                                    xxx
+ENDMAP

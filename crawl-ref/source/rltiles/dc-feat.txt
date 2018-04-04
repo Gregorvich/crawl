@@ -182,6 +182,83 @@ crumbled_column_6
 # Statues in Dis
 statue_iron DNGN_STATUE_IRON
 
+# NPCs. Doesn't make much sense to call them statues, but you can see
+# past them and they are mostly stationary, so it kind of makes sense.
+# Maybe create a separate feature for npcs at some point.
+%sdir dngn/statues/npcs
+npc_1 SHOPKEEPER_1
+npc_2 SHOPKEEPER_2
+npc_3 SHOPKEEPER_3
+human_male_main_character HERO_M
+human_female_main_character HERO_F
+
+# Furniture. Makes more sense to put them here than NPCs but would still
+# be nice if they were their own separate feature.
+%sdir dngn/statues/furniture
+alchemy_table ALCHEMY_TABLE
+bench BENCH
+table TABLE_CAKE
+
+# Ship parts
+%sdir dngn/statues/ship
+ship_tile_2 SHIP_TILE_2
+ship_tile_3 SHIP_TILE_3
+ship_tile_4 SHIP_TILE_4
+ship_tile_5 SHIP_TILE_5
+ship_tile_6 SHIP_TILE_6
+ship_tile_7 SHIP_TILE_7
+ship_tile_8 SHIP_TILE_8
+ship_tile_9 SHIP_TILE_9
+ship_tile_10 SHIP_TILE_10
+ship_tile_11 SHIP_TILE_11
+ship_tile_12 SHIP_TILE_12
+ship_tile_13 SHIP_TILE_13
+ship_tile_14 SHIP_TILE_14
+ship_tile_15 SHIP_TILE_15
+ship_tile_16 SHIP_TILE_16
+ship_tile_17 SHIP_TILE_17
+ship_tile_18 SHIP_TILE_18
+ship_tile_19 SHIP_TILE_19
+ship_tile_20 SHIP_TILE_20
+ship_tile_21 SHIP_TILE_21
+ship_tile_22 SHIP_TILE_22
+ship_tile_23 SHIP_TILE_23
+ship_tile_26 SHIP_TILE_26
+ship_tile_27 SHIP_TILE_27
+ship_tile_28 SHIP_TILE_28
+ship_tile_30 SHIP_TILE_30
+ship_tile_31 SHIP_TILE_31
+ship_tile_35 SHIP_TILE_35
+ship_tile_37 SHIP_TILE_37
+ship_tile_38 SHIP_TILE_38
+ship_tile_40 SHIP_TILE_40
+ship_tile_41 SHIP_TILE_41
+ship_tile_42 SHIP_TILE_42
+ship_tile_43 SHIP_TILE_43
+ship_tile_44 SHIP_TILE_44
+ship_tile_45 SHIP_TILE_45
+ship_tile_46 SHIP_TILE_46
+ship_tile_47 SHIP_TILE_47
+ship_tile_50 SHIP_TILE_50
+ship_tile_51 SHIP_TILE_51
+ship_tile_52 SHIP_TILE_52
+ship_tile_53 SHIP_TILE_53
+ship_tile_54 SHIP_TILE_54
+ship_tile_55 SHIP_TILE_55
+ship_tile_56 SHIP_TILE_56
+ship_tile_57 SHIP_TILE_57
+ship_tile_58 SHIP_TILE_58
+ship_tile_59 SHIP_TILE_59
+ship_tile_60 SHIP_TILE_60
+ship_tile_63 SHIP_TILE_63
+ship_tile_64 SHIP_TILE_64
+ship_tile_66 SHIP_TILE_66
+ship_tile_67 SHIP_TILE_67
+ship_tile_68 SHIP_TILE_68
+ship_tile_70 SHIP_TILE_70
+ship_tile_71 SHIP_TILE_71
+ship_tile_73 SHIP_TILE_73
+
 ## Features only used in certain minivaults
 %sdir dngn/vaults
 
@@ -668,5 +745,3 @@ vine_corner_NW VINE_OVERLAY_NW
 vine_corner_NE VINE_OVERLAY_NE
 vine_corner_SE VINE_OVERLAY_SE
 vine_corner_SW VINE_OVERLAY_SW
-
-%sdir dngn/npcs

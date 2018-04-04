@@ -1,0 +1,25 @@
+#Utility
+{{
+function arena_sprint_is_boss_round(round_id)
+    return (round_id < 27 and round_id % 5 == 0) or (round_id > 27 and round_id % 3 == 0)
+end
+
+function arena_sprint_spawn_enemies(data)
+    local sp = dgn.find_marker_positions_by_prop(data.spawn_dir, 1)
+    for _, pos in ipairs(sp) do
+        if data.num_spawned >= data.round_enemies then
+            break
+        end
+        if crawl.one_chance_in(#sp) then
+            if arena_sprint_is_boss_round(data.round_id) and not data.boss_spawned then
+                local dude = dgn.create_monster(pos.x, pos.y, data.monster_set[2])
+                if dude then
+                    dude.set_prop("boss_mons", 1)
+                    dude.beh = mons.behavior("wander")
+                    data.num_spawned = data.num_spawned + 1
+                    data.boss_spawned = true
+                    dgn.apply_area_cloud(pos.x, pos.y, 10, 10, 1, 1,
+                                         "translocation energy", "other", -1)
+}}
+
+#Maps

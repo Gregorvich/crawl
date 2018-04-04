@@ -499,6 +499,31 @@ grass0-dirt-mix1 FLOOR_GRASS_DIRT_MIX
 grass0-dirt-mix2
 grass0-dirt-mix3
 
+#Ship floors
+%sdir dngn/floor/ship
+ship_tile_1 SHIP_TILE_1
+ship_tile_29 SHIP_TILE_29
+ship_tile_32 SHIP_TILE_32
+ship_tile_36 SHIP_TILE_36
+ship_tile_39 SHIP_TILE_39
+ship_tile_49 SHIP_TILE_49
+ship_tile_61 SHIP_TILE_61
+ship_tile_62 SHIP_TILE_62
+ship_tile_74 SHIP_TILE_74
+ship_tile_75 SHIP_TILE_75
+ship_tile_76 SHIP_TILE_76
+ship_tile_77 SHIP_TILE_77
+ship_tile_78 SHIP_TILE_78
+ship_tile_79 SHIP_TILE_79
+ship_tile_80 SHIP_TILE_80
+ship_tile_81 SHIP_TILE_81
+ship_tile_82 SHIP_TILE_82
+ship_tile_83 SHIP_TILE_83
+ship_tile_84 SHIP_TILE_84
+ship_tile_85 SHIP_TILE_85
+ship_tile_86 SHIP_TILE_86
+ship_tile_87 SHIP_TILE_87
+
 %sdir dngn/floor
 floor_nerves0 FLOOR_NERVES FLOOR_NERVES_RED
 floor_nerves1
