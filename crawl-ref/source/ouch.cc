@@ -1052,6 +1052,10 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
     }
 #endif  // WIZARD
 
+    if (crawl_state.game_is_hero_mode()) {
+        //Function the same as wizard mode, but spawn player somewhere
+    }
+
     if (crawl_state.game_is_tutorial())
     {
         crawl_state.need_save = false;

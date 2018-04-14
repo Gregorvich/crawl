@@ -608,6 +608,11 @@ bool game_state::game_is_hints_tutorial() const
     return game_is_hints() || game_is_tutorial();
 }
 
+bool game_state::game_is_hero_mode() const
+{
+    return game_is_hero_mode();
+}
+
 string game_state::game_type_name() const
 {
     return game_type_name_for(type);
@@ -629,6 +634,8 @@ string game_state::game_type_name_for(game_type _type)
         return "Arena";
     case GAME_TYPE_SPRINT:
         return "Dungeon Sprint";
+    case GAME_TYPE_HERO_MODE
+        return "Hero Mode";
     }
 }
 
