@@ -49,6 +49,14 @@ static bool _banned_combination(job_type job, species_type species)
         return true;
     }
 
+    if (job == JOB_HOLY_KNIGHT && 
+        ((species != SP_HUMAN) &&
+        (species != SP_DEEP_DWARF) &&
+        (species != SP_DEEP_ELF)))
+    {
+        return true;
+    }
+
     return false;
 }
 

@@ -63,6 +63,11 @@ Gladiator
 Gladiators are ready for the arena with light armour, nets, and a weapon of
 their choice.
 %%%%
+Holy Knight
+
+Radiant protectors of the common folk, holy knights start out specialized
+in melee weapons and fire magic. They have minimal starting gear, however.
+%%%%
 Hunter
 
 Hunters carry a ranged weapon of their choice, and are also equipped with light

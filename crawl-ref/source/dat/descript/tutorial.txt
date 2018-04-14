@@ -736,3 +736,468 @@ tutorial5 exit
 
                                  <cyan>Press <input>any key</input> to clear this screen...</cyan>
 %%%%
+############################################
+# Tutorial 6: Brief tutorial for arena map #
+############################################
+tutorial6 start
+
+As you rest in the cabin of your ship, you feel the ship steadily come to
+a halt. "Land ho! Land ho!" You hear from the deck just outside of your
+cabin. It seems that the merchant ship you hired came through on its
+promise to deliver you to the country of Grim Haven, a land ripe with
+monsters and ruined villages. There is, however, one attraction that
+brings adventurers and civilians alike to this desolate land: The Arena.
+The Arena is a proving ground filled with the dangerous monsters that
+foolhardy merchants have gathered from the continent in order to provide
+a spectacle for those who have scarcely witnessed monsters before. Although
+it has this less than glorifying reputation, it has still served as a
+gathering place for legendary heros who wish to show their mettle.
+Reputation gains are hardly important to you, but the opportunity to
+face challenging monsters sets your blood on fire in a way that nothing
+else can. And if you rid the world of a few of those savage beasts in the 
+process, all the better. You have journeyed to this land to enter into the 
+arena and spill some blood. Good luck!
+%%%%
+tutorial6 movement
+
+Use the <input>Arrow Keys</input> to move around. You can also move by clicking somewhere
+with your <input>Mouse</input>. Step onto the blue pad to continue the tutorial.
+%%%%
+tutorial6 viewing_messages
+
+Press <input>$cmd[CMD_REPLAY_MESSAGES]</input> to get a full list of all of
+your messages.
+%%%%
+tutorial6 sprinting
+
+Hold <input>Shift</input> along with the <input>Arrow Keys</input> to move
+in the specified direction quickly
+%%%%
+tutorial6 diagonal_movement
+
+You can move diagonally by using the <input>Number Pad</input>.
+%%%%
+tutorial6 opening_doors
+
+You can open closed doors by walking into them
+%%%%
+tutorial6 closing_doors
+
+You may wish to close doors you have opened. To do this, press <input>$cmd[CMD_CLOSE_DOOR]</input>.
+Try it on the door you have just opened.
+%%%%
+tutorial6 water
+
+Notice how you can move through shallow water but not deep water.
+%%%%
+tutorial6 weapons
+
+You are currently unarmed and are in no state to defend yourself. Go
+retrieve your weapons and armour.
+%%%%
+tutorial6 picking_up_items
+
+<input>$cmd[CMD_PICKUP]</input> picks up items from the ground. Items you 
+can pickup are also displayed on the bottom of the inventory panel. You 
+can also pick up the items by clicking on them here.
+%%%%
+tutorial6 equipping_items
+
+<input>$cmd[CMD_WIELD_WEAPON]</input> displays your inventory in a grid.
+This is a typical way Dungeon Crawl Stone Soup displays selection options.
+From here you can select what you want to equip and press enter, or, 
+alternatively, you can equip items by simply clicking on them in the 
+inventory panel.
+%%%%
+tutorial6 armour
+
+Now go retrieve your armour. Pick it up using <input>$cmd[CMD_PICKUP]</input>,
+and press <input>$cmd[CMD_WEAR_ARMOUR]</input> or click on the armour to wear it.
+%%%%
+tutorial6 adventuring_1
+
+Great! You are now prepared to disembark onto the shore. Move west and
+then try to make your way north.
+%%%%
+tutorial6 combat_1
+
+You can attack enemies by simply walking into them.
+%%%%
+tutorial6 combat_2
+
+After combat, it is usually a good idea to rest. This will restore your 
+health and magic points as long as there are no enemies around. Press
+<input>$cmd[CMD_REST]</input> to rest.
+%%%%
+tutorial6 food
+
+Before continuing, this is a good opportunity to discuss food. Simply put,
+you will get hungry as you perform certain actions, so it is a good idea
+to stock up on food. You can butcher corpses by standing over them and
+pressing <input>$cmd[CMD_BUTCHER]</input>. Try doing this on the rat you have just killed.
+%%%%
+tutorial6 options
+
+Continuing north will lead to an area where you can learn the more
+advanced mechanics of Dungeon Crawl Stone Soup. If you would rather skip
+the rest of the tutorial, then you can head to The Arena (west) or pick
+a religion in the cathedral (north east). It is strongly recommended to 
+play through the rest of the tutorial if this is your first playthrough.
+%%%%
+tutorial6 adventuring_2
+
+Great choice! Just keep heading north along the path and follow the blue
+squares.
+%%%%
+tutorial6 examining_enemies_1
+
+Before engaging in combat, it can be a good idea to know what you're in for.
+Hovering the mouse over an enemy or any environmental feature will display
+a brief explanation of it. You may notice that, later, many of the structures
+are called "statues." Don't worry about that. You can display even more
+information about an enemy with <input>Right Mouseclick</input>, such
+as its health and the maximum damage it can deal.
+%%%%
+tutorial6 examining_enemies_2
+
+Try to determine which route is the safest by examining the enemies.
+%%%%
+tutorial6 leveling_up
+
+You have just leveled up! Leveling up results in more health and magic
+points, and it will also occasionally increase one of your attributes-
+strength, intelligence, or dexterity.
+%%%%
+tutorial6 skills_1
+
+Along with your three core attributes, you also have a very particular
+set of skills, skills that you have acquired over a long period of time.
+*Ahem*. To view these, click on the skills tile on the top of the inventory
+panel.
+%%%%
+tutorial6 skills_2
+
+Skills are leveled up by acquiring regular combat experience. The orange
+percentages show how much of your experience is contributing to a
+particular skill. Greyed out skills are not currently being trained.
+Naturally, having less skills selected as being trained will increase
+the amount of experience gained by those that are set to be trained. You
+can toggle which skills you'd like to focus on by clicking on them.
+%%%%
+tutorial6 skills_3
+
+Skills are an important aspect of DDSS, as they determine how much benefit
+you will receive out of your equipment. For example, increasing the armour
+skill reduces the penalty of armour weight, increases armour rating for
+heavier armour, and increases your chance of successfully casting spells
+while wearing heavier armour (More on spellcasting later). To view a
+description of what skills do, click on the skill tab to the left of the
+inventory panel and hover over skills you'd like to learn about.
+%%%%
+tutorial6 ranged_combat_1
+
+Okay! Let's move onto the art of ranged combat. First of all, pick up
+the tomahawks left on the ground.
+%%%%
+tutorial6 ranged_combat_2
+
+To fire ammunition at an enemy, press <input>$cmd[CMD_FIRE]</input>. This
+will automatically select an enemy for you. You can then switch between
+enemies by pressing <input>$cmd[CMD_TARGET_CYCLE_FORWARD]</input>.
+Alternatively, you can click on the item in your inventory and manually
+select an enemy to fire at.
+%%%%
+tutorial6 ranged_combat_3
+
+Try to kill the encampment of goblins on the opposite side of the river.
+Don't worry about the goblin with the dagger; it cannot reach you from there.
+This is a good tactic to keep in mind: focus your fire on the most immediate
+threat when attacking from range.
+%%%%
+tutorial6 ranged_combat_4
+
+Bows work the same as tomahawks, granted you will need both a bow and arrows
+to use them.
+%%%%
+tutorial6 auto_pickup_1
+
+Some items are picked up automatically when you walk over them. These items
+will have a green frame over them.
+%%%%
+tutorial6 identification
+
+Most items you find on the ground come unidentified, meaning you know what
+the object is, but little else about it. One way to identify the properties
+of an object is to use it. Try this on the scroll you just picked up.
+<input>$cmd[CMD_READ]</input> will bring up a menu of readable items in your
+inventory.
+%%%%
+tutorial6 help
+
+If you are ever getting overwhelmed by the number of key commands,
+<input>$cmd[CMD_DISPLAY_COMMANDS]</input> will give you a list of categories
+for the different commands. Selecting a category will give you all of the
+commands related to that category.
+%%%%
+tutorial6 auto_pickup_2
+
+Auto-pickup will not work when there is an enemy around. To pick up this
+item, either do so manually or defeat the enemy first.
+%%%%
+tutorial6 enchanted_items
+
+Blue items will always be enchanted, or have special properties, or both. You
+will need to wield the item to find out what those properties are.
+%%%%
+tutorial6 examining_items
+
+You can get a brief summary of an item's stats by hovering your mouse over it.
+You can also get a more detailed explanation of the item by 
+<input>Mouse Rightclicking</input> it.
+%%%%
+tutorial6 poisoned_weapons
+
+A good tactic for using poisoned weapons is to poison an enemy and to quickly
+retreat afterwords. Try doing this to defeat the next group of enemies.
+Remember that positioning is key in winning your battles, and knowing
+when to retreat is a part of this.
+%%%%
+tutorial6 potions_1
+
+Potions are vital to survival, as they provide ever important healing
+benefits and other useful enchantments. They can also, however, have
+undesirable effects. Press <input>$cmd[CMD_QUAFF]</input> to quaff
+(drink) a potion, or alternatively click on it in your inventory.
+%%%%
+tutorial6 potions_2
+
+These healing potions will probably be useful for the rest of the
+tutorial.
+%%%%
+tutorial6 picking_up_many_items
+
+There is currently a lot of items on the floor, and pressing
+<input>$cmd[CMD_PICKUP]</input> will result in a menu appearing. Simply
+select what you want to pickup and press <input>ENTER</input>. Remember 
+that you can also click on the items from the inventory panel that you'd
+like to pickup.
+%%%%
+tutorial6 artifacts
+
+Items with unique names are artifacts. Artifacts can have a number of unique
+properties, and some will give you new abilities. Press
+<input>$cmd[CMD_USE_ABILITY]</input> to look at your abilities or to use 
+one of them. Abilities will also appear above the inventory menu.
+%%%%
+tutorial6 wands
+
+Wands are used by evoking them <input>$cmd[CMD_EVOKE]</input>. Try to use
+this wand to defeat the difficult enemy ahead.
+%%%%
+tutorial6 increasing_attributes
+
+As mentioned before, you will occasionally get to increase an attribute
+when you level up. This will occur every three levels. The breakdown of
+the three attributes are as follows: \n
+<red>Strength- makes heavy armor less cumbersome and slightly increases weapon
+damage.</red> \n
+<lightblue>Intelligence- makes your spells more reliable and powerful.</lightblue> \n
+<yellow>Dexterity- increases your evasion and stealth.</yellow>
+%%%%
+tutorial6 jewelry_1
+
+Jewelry can provide many different benefits, such as increasing your
+attributes or giving you resistance to certain elements. Pick up this
+ring and equip it
+%%%%
+tutorial6 jewelry_2
+
+Oops! As it turns out that ring was <italics>cursed</italics>. Cursed
+equipment are detrimental to your stats, and cannot be removed once
+equipped. No need to worry though, scrolls of remove curse can be used
+to lift the curses from all equipment you are wearing.
+%%%%
+tutorial6 jewelry_3
+
+Lifting the curse from cursed equipment does not remove the penalties the
+item gives you- it simply allows you to remove it. You might as well drop
+the ring you picked up earlier. Press <input>$cmd[CMD_DROP]</input> to drop
+items from your inventory, or <input>Shift Leftclick<\input> the item you
+want to drop.
+%%%%
+tutorial6 shops
+
+Shops offer a variety of items, from armour to scrolls to potions. You are
+not able to sell any items to them, however. To access a shop's inventory,
+press <input>$cmd[CMD_GO_UPSTAIRS]</input>. To buy items, select the items
+you want to buy, press <input>Enter</input>, and confirm the choice with
+<input>y</input>es. Pressing <input>!</input> will cause selecting an item
+to pull up a more detailed description of it.
+%%%%
+tutorial6 intro_to_magic
+
+Next, you will learn the art of using magic. To acquire new spells, you
+must get access to spellbooks. Picking up a spellbook automatically
+adds any spells in it to your list of spells. Pick up the spellbook on
+the ground.
+%%%%
+tutorial6 memorisation
+
+The next step to using a spell is to memorise it. Press
+<input>$cmd[CMD_MEMORISE_SPELL]</input> to access your list of spells 
+and memorise one of them. You can also click on the memorise tab to the 
+left of the inventory menu.
+%%%%
+tutorial6 memorisation_2
+
+You may have noticed the numbers next to each spell in the memorisation
+menu. This indicates how many spell points you need to spend to unlock
+a spell. The amount of spell points you need to spend for a spell is called
+a spell's "level." At level 1, only level 1 spells are available to you,
+but this will change as you gain experience.
+%%%%
+tutorial6 casting_spells
+
+Use your new found power to defeat the enemies. You can cast spells by
+pressing <input>$cmd[CMD_CAST_SPELL]</input>, or by clicking on the spell's tile above
+the inventory menu.
+%%%%
+tutorial6 spell_menu
+
+Press <input>$cmd[CMD_DISPLAY_SPELLS]</input> to look at all of your memorised spells. You
+can also select which spell you would like to cast by pressing
+<input>z?</input> together.
+%%%%
+tutorial6 regaining_mana
+
+Remember that resting regenerates your mana as well as your health. If
+necessary, retreat and rest to regenerate your mana and to continue to cast
+your spells.
+%%%%
+tutorial6 miscasting_spells
+
+Miscasting spells can result in nasty consequences. The more difficult the
+spell, the more nasty these consequences will be. You can increase your
+chance of successfully casting a spell by increasing your magic related
+skills. It can also be improved with the help of some items.
+%%%%
+tutorial6 recasting_spells
+
+You can quickly recast the last spell you used on a monster with
+<input>Ctrl+Leftclick</input>.
+%%%%
+tutorial6 staves
+
+Staves, despite being poor melee weapons, can be used to increase your
+proficiency with casing spells. Notice the improvement of your spell
+success chance after equipping the staff. Success chances can be looked
+at by hovering over the spell tile. Different equipment can increase
+or decrease your spell success chance. Shields and heavy armour will
+greatly decrease the chance of successfully casting a spell.
+%%%%
+tutorial6 spells_and_hunger
+
+Spellcasting greatly increases your hunger. The more difficult the spell,
+the greater it increases it. This can be reduced by increasing your
+intelligence stat and by training the spellcasting skill.
+%%%%
+tutorial6 spell_slots
+
+The number of spells you can memorise limits the number of spell slots
+you can have. Additional slots can be gained by gaining levels and by
+raising your spellcasting skill. 
+%%%%
+tutorial6 necromancy_1
+
+Time for something a little more interesting. Head south past the gate and
+then west into the area with the pond.
+%%%%
+tutorial6 necromancy_2
+
+Ah look! A graveyard. A necromancer's paradise. Pick up the spellbook to
+learn the raise undead spell. There is also a scroll of amnesia here in
+case you do not have enough spell slots to learn the spell. Scrolls of
+amnesia can be used to forget a memorised spell and refund your spell_points.
+%%%%
+tutorial6 necromancy_3
+
+Now, use your new spell to raise an undead army! Once you do that,
+proceed north to the next tutorial.
+%%%%
+tutorial6 necromancy_4
+
+You probably noticed that you can switch places with your allies by
+walking into them. This can be a useful tactic for escaping danger and
+forcing your ally take enemy attacks for you.
+%%%%
+tutorial6 necromancy_5
+
+You might want to wait for your allies to catch up with you before you
+enter this cave. Press <input>$cmd[CMD_WAIT]</input> to wait for a single
+turn.
+%%%%
+tutorial6 necromancy_6
+
+Now, use your undead army to wreck havic on the inhabitants of this cave!
+Press <input>#cmd[CMD_SHOUT]</input> to command your allies to attack.
+%%%%
+tutorial6 necromancy_7
+
+Animate skeleton works on any corpse with a skeleton inside, and also
+gives you meat in the process. Be sure to rebuild your army before
+leaving.
+%%%%
+tutorial6 removing_equipment
+
+If you ever want to remove your equipment because it is hindering your
+spellcasting or for other reasons, you can press
+<input>$cmd[CMD_REMOVE_ARMOUR]</input> to select which armour you want to
+remove.
+%%%%
+tutorial6 ambush
+
+Where did all of these enemies come from? No matter, use everything you
+have learned to defeat the enemy horde!
+%%%%
+tutorial6 conclusion
+
+Congratulations! You have completed the tutorial and are now ready to
+embark on adventures. As a reward, you are allowed to keep everything
+you have gained during the tutorial. Do keep in mind though that these
+items are relatively cheap, so don't feel you have to re-complete the
+tutorial if you meet an unfortunate end. One more thing, if you want
+to learn about gods and gain god abilities, enter the cathedral to
+the southeast. Look out for these blue tutorial panels if you have
+questions.
+%%%%
+tutorial6 death
+
+In DCSS, death will result in your score being saved, followed by your 
+save being deleted. In short, there are no extra lives or respawning, so 
+do try to be careful. Dying is not the end however- get back into the game
+and learn from your mistakes!
+%%%%
+tutorial6 waiting
+
+You may have noticed that enemies only move when you do. DDGS is turn based,
+which means that all actions consist of turns, including movement. So,
+take time to consider your tactics and whether they will lead to death.
+%%%%
+tutorial6 tactics
+
+Rather than rushing into a swarm of enemies, let's try to use better tactics. 
+You can wait a single turn by pressing <input>$cmd[CMD_WAIT]</input>. Use 
+this to let the enemies come to you, and then attack them one at a time.
+%%%%
+tutorial6 victory_1
+
+Very well done. Proceed to the next tutorial marker.
+%%%%
+tutorial6 victory_2
+
+Nice, very nice. Let's head back to the cathedral area to wrap things up.
+%%%%
+tutorial6 boots
+
+Don't forget your boots!
+%%%%

@@ -191,6 +191,16 @@ npc_2 SHOPKEEPER_2
 npc_3 SHOPKEEPER_3
 human_male_main_character HERO_M
 human_female_main_character HERO_F
+human_female_blonde FEMALE_BLONDE
+human_female_innkeeper FEMALE_INNKEEPER
+human_female_red_head FEMALE_RED_HEAD
+human_male_black_innkeeper MALE_INNKEEPER
+human_male_blacksmith MALE_BLACKSMITH
+human_male_dude SOME_DUDE
+human_male_gold GOLDEN_KNIGHT
+human_male_hippi MALE_KILT
+human_male_knight SILVER_KNIGHT
+human_male_knight_2 ARENA_GUARD
 
 # Furniture. Makes more sense to put them here than NPCs but would still
 # be nice if they were their own separate feature.
@@ -198,6 +208,88 @@ human_female_main_character HERO_F
 alchemy_table ALCHEMY_TABLE
 bench BENCH
 table TABLE_CAKE
+
+shelf_1 SHELF_1
+shelf_2 SHELF_2
+shelf_3 SHELF_3
+shelf_4 SHELF_4
+shelf_5 SHELF_5
+shelf_6 SHELF_6
+shelf_7 SHELF_7
+shelf_8 SHELF_8
+shelf_9 SHELF_9
+shelf_10 SHELF_10
+shelf_11 SHELF_11
+shelf_12 SHELF_12
+shelf_13 SHELF_13
+shelf_14 SHELF_14
+shelf_15 SHELF_15
+shelf_16 SHELF_16
+shelf_17 SHELF_17
+shelf_18 SHELF_18
+
+shelf_apple SHELF_APPLE
+shelf_armour SHELF_ARMOUR
+shelf_fruit SHELF_FRUIT
+shelf_gold SHELF_GOLD
+shelf_helmet SHELF_HELMET
+shelf_jewelry SHELF_JEWELRY
+shelf_potion SHELF_POTION
+shelf_scroll SHELF_SCROLL
+shelf_wand SHELF_WAND
+shelf_weapon_1 SHELF_WEAPON_1
+shelf_weapon_2 SHELF_WEAPON_2
+shelf_book SHELF_BOOK
+shelf_key SHELF_KEY
+
+table_1 TABLE_FOOD
+table_2 TABLE_CLEAR
+table_2_cards TABLE_CARDS
+table_2_pizza TABLE_PIZZA
+table_2_pizza_slice TABLE_PIZZA_SLICE
+
+urand_bullseye ARCHERY_TARGET
+barrel_1 BARREL_1
+barrel_2 BARREL_2
+bed_1 BED_1
+bed_2 BED_2
+bed_3 BED_3
+bed_4 BED_4
+bed_5 BED_5
+bed_6 BED_6
+bookshelf_section_1 BOOKSHELF_1
+bookshelf_section_2 BOOKSHELF_2
+bookshelf_section_3 BOOKSHELF_3
+bookshelf_section_4 BOOKSHELF_4
+bucket_1 BUCKET_1
+bucket_2 BUCKET_2
+chair_1 CHAIR_1
+chair_2 CHAIR_2
+chair_3 CHAIR_3
+chair_4 CHAIR_4
+
+fruit_empty_1 FRUIT_EMPTY_1
+fruit_empty_2 FRUIT_BOTTOM
+fruit_brown_1 FRUIT_BROWN_1
+fruit_green_1 FRUIT_GREEN_1
+fruit_green_1_2 FRUIT_GREEN_2
+fruit_green_1_3 FRUIT_GREEN_3
+fruit_orange_1 FRUIT_ORANGE_1
+fruit_red_1 FRUIT_RED_1
+fruit_red_1_2 FRUIT_RED_2
+
+# Some smaller items.
+key_gold KEY_GOLD
+misc_bottle_blue POTION_BOTTLE_BLUE
+scroll_old SCROLL_OLD
+scroll_brown SCROLL_BROWN
+
+# Structures. They are put here mostly because we want them to be see
+# through. It would be weird for example to design a side of a building
+# only to not be able to see the middle part of it because the sides are
+# "covering" it.
+%sdir dngn/statues/structures
+sand_wall SAND_WALL_WOOD
 
 # Ship parts
 %sdir dngn/statues/ship

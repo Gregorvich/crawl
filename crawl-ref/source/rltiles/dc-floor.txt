@@ -524,6 +524,25 @@ ship_tile_85 SHIP_TILE_85
 ship_tile_86 SHIP_TILE_86
 ship_tile_87 SHIP_TILE_87
 
+# Floors with some objects on them
+%sdir dngn/floor/objects
+sand_bench SAND_BENCH
+sand_floor SAND_BENCH_FLOOR
+sand_stairs SAND_BENCH_STAIRS
+shelf_floor_1 SHELF_FLOOR_1
+shelf_floor_2 SHELF_FLOOR_2
+shelf_floor_3 SHELF_FLOOR_3
+shelf_floor_4 SHELF_FLOOR_4
+shelf_floor_5 SHELF_FLOOR_5
+shelf_floor_6 SHELF_FLOOR_6
+shelf_floor_7 SHELF_FLOOR_7
+shelf_floor_8 SHELF_FLOOR_8
+village_tile_1 VILLAGE_TILE_1
+scroll_floor_1 SCROLL_FLOOR_1
+scroll_floor_2 SCROLL_FLOOR_2
+scroll_floor_3 SCROLL_FLOOR_3
+scroll_floor_4 SCROLL_FLOOR_4
+
 %sdir dngn/floor
 floor_nerves0 FLOOR_NERVES FLOOR_NERVES_RED
 floor_nerves1

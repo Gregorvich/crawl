@@ -1,5 +1,8 @@
 #Utility
 {{
+-- Arena functions. Many, many functions, including ones that will spawn
+-- enemies, run the countdown, declare which enemies to use for the rounds,
+-- and the Triggerable Function definition itself.
 function is_boss_round(round_id)
     return round_id % 5 == 0
 end
@@ -837,7 +840,72 @@ function toggle_pressure_plate_2(data, triggerable, triggerer, marker, ev)
         data.arena_running = true
     end
 end
+-- Tutorial functions. Some stuff is similar to the arena functions
+-- because the tutorial uses monster spawning.
+require("dlua/tutorial.lua")
 
+tutorial6 = {}
+
+function tutorial6.msg(text)
+    return tutorial_msg("tutorial6 " .. text)
+end
+
+function rat_death(data, triggerable, triggerer, marker, ev)
+    data.num_killed = data.num_killed + 1
+    if data.num_killed == 3 then
+        crawl.tutorial_msg("tutorial6 food")
+    end
+end
+
+function sword_move(data, triggerable, triggerer, marker, ev)
+    crawl.tutorial_msg("tutorial6 picking_up_items")
+    crawl.tutorial_msg("tutorial6 equipping_items")
+    crawl.tutorial_msg("tutorial6 armour")
+end
+
+function armour_pickup(data, triggerable, triggerer, marker, ev)
+    crawl.tutorial_msg("tutorial6 boots")
+end
+
+function boots_pickup(data, triggerable, triggerer, marker, ev)
+    crawl.tutorial_msg("tutorial6 adventuring_1")
+end
+
+function raise_bridge(data, triggerable, triggerer, marker, ev)
+    data.goblins_killed = data.goblins_killed + 1
+    if data.goblins_killed == 2 then
+        local my_slaves = dgn.find_marker_positions_by_prop("submerged_bridge", 1)
+        for _, pos in ipairs(my_slaves) do
+            dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
+            if you.see_cell(pos.x, pos.y) then
+                crawl.mpr("<blue>You hear a rush of water. A bridge rises from the "
+                          .. "river!</blue>")
+            else
+                crawl.mpr("<blue>You hear a rush of water in the distance</blue>")
+            end
+        end
+        local rock_wall_position = dgn.find_marker_positions_by_prop("stone_wall", 1)[1]
+        dgn.terrain_changed(rock_wall_position.x, rock_wall_position.y, "floor", false, false, false)
+        if you.see_cell(rock_wall_position.x, rock_wall_position.y) then
+            crawl.mpr("<green>A wall also slides away</green>")
+        else
+            crawl.mpr("<green>You also hear a distant sliding sound</green>")
+        end
+    end
+end
+
+function melt_ice(data, triggerable, triggerer, marker, ev)
+    data.goblins_killed = data.goblins_killed + 1
+    if data.goblins_killed == 1 then
+        local ice_block_position = dgn.find_marker_positions_by_prop("ice_block", 1)[1]
+        dgn.terrain_changed(ice_block_position.x, ice_block_position.y, "floor", false, false, false)
+        if you.see_cell(ice_block_position.x, ice_block_position.y) then
+            crawl.mpr("<lightblue>The ice block on the bridge melts</lightblue>")
+        else
+            crawl.mpr("<lightblue>You hear a distant slushing sound</lightblue>")
+        end
+    end
+end
 }}
 
 
@@ -854,16 +922,33 @@ SUBVAULT: m : training_area
 SUBVAULT: c : rocky_path
 SUBVAULT: e : entryway
 SUBVAULT: s : oasis
-SUBVAULT: f : frozen_lands
+SUBVAULT: f : cave
 SUBVAULT: d : rocky_shore
+SUBVAULT: h : frozen_lands
 
 MAP
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
 aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
 aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
 aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
@@ -1015,10 +1100,29 @@ TILE: Z = floor_sand
 TILE: Y" = floor_cobble_blood
 TILE: J = dngn_grate
 TILE: cA = wall_sandstone
+KFEAT: deghijk = G
+TILE: d = female_red_head
+TILE: e = female_blonde
+TILE: g = male_kilt
+TILE: h = golden_knight
+TILE: i = silver_knight
+TILE: k = sand_wall_wood
+KFEAT: sfl = .
+FTILE: s = sand_bench
+FTILE: f = sand_bench_floor
+FTILE: l = sand_bench_stairs
+FTILE: deghijk = sand_bench
+KPROP: ZJY".sfl = no_tele_into
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxx
-xaaaaaa..BBBB..aaaaaax
+xfsdsssfsgssisfsssissx
+xlkkkkklkkkkkklkkkkklx
+xfsgsesfsdssisfsshssfx
+xlkkkkklkkkkkklkkkkklx
+xfsssssfsgssssfsisesfx
+xlkkkkaaaaaaaaaakkkklx
+xsdaaaa..BBBB..aaaassx
 xaaaF............Gaaax
 x..................xxx
 x..................xxx
@@ -1040,12 +1144,13 @@ TAGS: barracks no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 FTILE: . = floor_cobble_blood
 RTILE: x = wall_catacombs
 KITEM: p = potion of heal wounds q:10, potion of haste q:3
+KPROP: . = no_tele_into
 
 MAP
 xxxxxxxxxxxx
 x..........x
 x..p.......x
-x......{...x
+x..........x
 ...........x
 x..........x
 x..........x
@@ -1077,49 +1182,133 @@ xxx++xxx
 ENDMAP
 
 NAME: Grassy_Area_1
-TAGS: grassy_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+TAGS: grassy_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup no_monster_gen
 KFEAT: re = x
-KFEAT: f = .
+KFEAT: fdgi1234567890 = .
 FTILE: .t = floor_grass
 RTILE: r = wall_orc
 RTILE: e = wall_brick_yellow
-FTILE: f = floor_pebble_brown
+FTILE: f = village_tile_1
 KFEAT: abcmyzP = G
 TILE: a = SHOPKEEPER_3
 TILE: b = SHOPKEEPER_2
 TILE: c = SHOPKEEPER_1
 FTILE: myz = floor_grass
 FTILE: abc = floor_pebble_brown
-TILE: m = SHIP_TILE_4
-TILE: y = SHIP_TILE_5
-TILE: z = SHIP_TILE_45
 TILE: P = ALCHEMY_TABLE
-FTILE: P = floor_pebble_brown
+FTILE: P = village_tile_1
+FTILE: d = floor_dirt
+FTILE: g = floor_pebble_lightgray
+FTILE: i = floor_vines
+KFEAT: ABCDEFGHIJKLMNOQRSUVWXYZ = G
+TILE: A = chair_1
+TILE: B = chair_2
+TILE: C = chair_3
+TILE: D = chair_4
+TILE: E = bookshelf_1
+TILE: F = bookshelf_2
+TILE: G = bookshelf_3
+TILE: H = bookshelf_4
+TILE: I = table_cards
+TILE: J = table_pizza
+FTILE: 1 = shelf_floor_3
+FTILE: 2 = shelf_floor_5
+FTILE: 3 = shelf_floor_6
+FTILE: 4 = shelf_floor_4
+TILE: K = bucket_1
+TILE: L = shelf_6
+TILE: M = shelf_apple
+FTILE: ABCDIJKLM = village_tile_1
+KFEAT: h = m
+TILE: h = wall_pebble_darkgray
+TILE: N = shelf_18
+TILE: O = table_cake
+FTILE: NOabc = village_tile_1
+FTILE: GH = village_tile_1
+FTILE: EF = wall_brick_yellow
+TILE: Q = male_blacksmith
+TILE: R = table_food
+TILE: S = male_innkeeper
+TILE: U = female_innkeeper
+FTILE: U = shelf_floor_3
+TILE: V = some_dude
+TILE: W = arena_guard
+FTILE: W = floor_grass
+FTILE: SV = village_tile_1
+KFEAT: jkmnopqsuvyz = G
+TILE: Z = shelf_12
+TILE: j = shelf_15
+TILE: k = shelf_16
+FTILE: 5 = shelf_floor_8
+FTILE: 6 = shelf_floor_1
+TILE: m = shelf_weapon_1
+TILE: n = shelf_weapon_2
+TILE: o = shelf_helmet
+TILE: p = shelf_potion
+TILE: q = shelf_book
+TILE: s = shelf_armour
+TILE: u = shelf_13
+TILE: v = shelf_7
+FTILE: mnvoqsQ = floor_pebble_lightgray
+FTILE: jkpquZ = village_tile_1
+TILE: y = shelf_scroll
+FTILE: y = wall_brick_yellow
+FTILE: 7 = scroll_floor_1
+FTILE: 8 = scroll_floor_2
+FTILE: 9 = scroll_floor_3
+FTILE: 0 = scroll_floor_4
+KFEAT: < = G
+TILE: < = shelf_jewelry
+FTILE: < = wall_brick_yellow
+KFEAT: ()>-?'! = G
+TILE: ( = fruit_empty_1
+TILE: ) = fruit_green_1
+TILE: > = fruit_brown_1
+TILE: - = fruit_red_2
+TILE: ? = fruit_bottom
+TILE: ' = fruit_green_2
+TILE: ! = fruit_red_1
+FTILE: ?/ = floor_vines
+FTILE: )>-'! = floor_grass
+KFEAT: * = G
+TILE: * = fruit_bottom
+FTILE: * = floor_grass
+KFEAT: #$z%^ = G
+TILE: # = shelf_wand
+FTILE: # = village_tile_1
+TILE: $ = barrel_1
+TILE: z = barrel_2
+TILE: % = bucket_2
+FTILE: $z% = floor_grass
+TILE: ^ = shelf_key
+FTILE: ^ = village_tile_1
+FTILE: R = village_tile_1
+FTILE: T = floor_vines
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxx..xxxxx
 xtttttttttttttttttttttttt..tttrr
-xt............................rr
-xt...eeeeeeee...................
-xt...efaffffe...................
-xt...efffffPe...................
-xt...effffffe.................rr
-xt...effffffe.................rr
-xt...effffffe.................rr
-xt...eeee+eee...........eeeeeerr
-xt......................efffferr
-xt.............myz......efffferr
-xt......................+ffcfetx
-xt..eeee+eee............effffetx
-xt..effffffe............eeeeeetx
-xt..effffffe..................tx
-xt..effffffe.....eeee+ee......tx
-xt..effffffe.....efffffe......tx
-xt..effffffe.....efbfffe......tx
-xt..effffffe.....efffffe......tx
-xt..eeeeeeee.....efffffe......tx
-xt...............eeeeeee......tx
-xt............................tx
+xt......................Wdd...rr
+xt...eeeeee<e.ggmnggggg..dd.....
+xt...efafZf1e.ogvvghhhg..ddddd..
+xt...epL^uffe.vggQghlhg..d......
+xt...e1116fke.sgggghhhg..d....rr
+xt...efffffje.vgggggggg..d....rr
+xt...ePffff5e.......dddddd....rr
+xt...eeee+eee.t)>-.dd...eeeeyerr
+xt.ttt.........???ii'!..e7771err
+xtddddddddddddiiiiii?*..e789ferr
+xtt..t........iiiTiii...+ffffetx
+xt..eeee+eeee.iiiiiii...e0fcfetx
+xt..efAVfffAe..iiiii....eeeeeetx
+xt..eBICfffJe$$...t...........tx
+xt..efDffffDezz...ee+eEFe.....tx
+xt..eRCfffSfe$....efffGHe.....tx
+xt..effffffOezt...effffZe.....tx
+xt..eKffffffe%....efbq#ue.....tx
+xt..eLMNLLLLe.....eff116e.....tx
+xt..e233U114e.....eeeeeee.....tx
+xt..eeeeeeeee.................tx
 xttttttttttttttttttttttttttttttx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
@@ -1140,53 +1329,128 @@ xxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME: Training_Area_1
-TAGS: training_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
-KFEAT: a = x
-KFEAT: b = x
-KFEAT: f = .
-FTILE: . = floor_woodground
-FTILE: f = floor_pebble_brown
+TAGS: training_area no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: abeS = x
+KFEAT: fmnocpqr = .
+FTILE: . = floor_grey_dirt
+FTILE: f = floor_crypt
 RTILE: x = wall_orc
-RTILE: a = wall_church
+RTILE: a = wall_catacombs
+RTILE: b = wall_crypt_metal
+FTILE: m = floor_slime
+FTILE: n = floor_swamp
+FTILE: o = floor_mud
+FTILE: c = floor_rough_red
+FTILE: p = floor_moss
+FTILE: q = floor_woodground
+RTILE: e = wall_vines
+FTILE: r = floor_vines
+KFEAT: s = deep_water
+KFEAT: g = clear_rock_wall
+TILE: g = dngn_grate
+KFEAT: hi = .
+FTILE: h = SHIP_TILE_62
+FTILE: i = floor_pebble_lightgray
+RTILE: S = wall_vines
+FTILE: S = floor_vines
+MONS: storm dragon, black bear hp:10, training dummy hp:5 ; shortbow \
+      not_cursed mundane . arrow q:10, \
+      col:blue goblin name:island_goblin_archer name_replace; shortbow \
+      not_cursed mundane . arrow q:10, \
+      col:blue goblin name:island_goblin_cutthroat name_replace; dagger
+KITEM: V = potion of heal wounds q:5
+KFEAT: ABCDEFGKIJKLMNOPQUVXYZ = .
+FTILE: ABCDEFGHIJKLMNOPQUVXYZ = tutorial_pad
+COLOUR: ABCDEFGHIJKLMNOPQUVXYZ = lightblue
+KITEM: N = tomahawk q:20 mundane
+KITEM: Q = arrow q:20 mundane
+MARKER: A = lua:tutorial6.msg("death")
+MARKER: B = lua:tutorial6.msg("options")
+MARKER: C = lua:tutorial6.msg("adventuring_2")
+MARKER: D = lua:tutorial6.msg("sprinting")
+MARKER: E = lua:tutorial6.msg("opening_doors")
+MARKER: F = lua:tutorial6.msg("closing_doors")
+MARKER: G = lua:tutorial6.msg("examining_enemies_1")
+MARKER: H = lua:tutorial6.msg("examining_enemies_2")
+MARKER: I = lua:tutorial6.msg("leveling_up")
+MARKER: J = lua:tutorial6.msg("skills_1")
+MARKER: K = lua:tutorial6.msg("skills_2")
+MARKER: L = lua:tutorial6.msg("skills_3")
+MARKER: M = lua:tutorial6.msg("increasing_attributes")
+MARKER: N = lua:tutorial6.msg("ranged_combat_1")
+MARKER: O = lua:tutorial6.msg("ranged_combat_2")
+MARKER: P = lua:tutorial6.msg("ranged_combat_3")
+MARKER: Q = lua:tutorial6.msg("ranged_combat_4")
+MARKER: U = lua:tutorial6.msg("auto_pickup_1")
+MARKER: V = lua:tutorial6.msg("potions_1")
+MARKER: X = lua:tutorial6.msg("potions_2")
+{{
+local raise_bridge_marker = TriggerableFunction:new {
+    func = "raise_bridge",
+    repeated = true,
+    data = {
+        goblins_killed = 0
+    }
+}
+
+raise_bridge_marker:add_triggerer(DgnTriggerer:new {
+    type = "monster_dies",
+    target = "island goblin archer"
+})
+
+lua_marker("s", portal_desc {submerged_bridge = 1})
+lua_marker("S", portal_desc {stone_wall = 1})
+lua_marker("R", raise_bridge_marker)
+}}
+FTILE: s = SHIP_TILE_62
+FTILE: 12 = floor_vines
+FTILE: 345 = floor_woodground
+KFEAT: R = tree
+FTILE: R = floor_woodground
+KFEAT: T = tree
+FTILE: T = floor_woodground
+FTILE: t = floor_woodground
+TILE: t = DNGN_TREE_YELLOW
+TILE: T = DNGN_TREE_RED
 
 MAP
-xxxxxxxxxxxxxxxxxxxxxx
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-x....................x
-.....................x
-x....................x
-x....................x
-x....aaaaa++aaaaa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....affffffffffa....x
-x....aaaaa++aaaaa....x
-x....................x
-x....................x
-.......xxxxxxxxxxxxxxx
-.......x
-.......x
-x......x
-x......x
+xxxxxxxxxxxxxxxqqexxqx
+xqqrNrqOqWwwWq3qqeqqqx
+xqMrerrqqWwwWq3qqeqqqx
+xqLrerQqqqWwwWtqqeeqqx
+xqKree3rqqqWwwweSeeqqx
+xrJIreerrqqssssqq4eqqx
+xrrrrrerPqqWwwWq4qeqqx
+x+geg+eRrqqqWwwW5qeqqx
+x1rer2eeeeeeeWwwWWwhwx
+xrrerrerrqqqqWWwwwwiwx
+x+geg+errqqqqqqWWWwhwx
+xqqqrreerrrrqqqqqWWhWx
+xTrHGrrerrrrrrrrrrrrrx
+xeeerrFerrreeeeeeeeeex
+xqqeee+eeeeeqqqqqqqqqx
+pqqoqqqqqqqqqqqqqqqqqx
+xppoppEppppppqqqqqqqqx
+xppooooooooopppqqqqqqx
+xppoXppaaa++aaaqqqqqqx
+xppoppaaffffffaaqqqqqx
+xppoVaaffffffffaaaaaax
+xppopaffbbffbbffffffax
+xppUpaffbffffbfccccfax
+xppopaffbfccfbfccccfax
+xppopaffbfccfbfccccfax
+xppopaffbffffbfccccfax
+xppCpaffbbffbbffffffax
+xppopaaffffffffaaaaaax
+xppoppaaffffffaapppppx
+xppopppaaa++aaappp...x
+xppoooooooooppppp....x
+x..popppppppp........x
+....o..xxxxxxxxxxxxxxx
+....B..x
+....o..x
+x..Do..x
+x...A..x
 xxxx..xx
 ENDMAP
 
@@ -1194,7 +1458,8 @@ NAME: Oasis_1
 TAGS: oasis no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
 FTILE: . = floor_moss
 RTILE: x = wall_orc
-#TILE: T = trees_mangrove
+TILE: t = DNGN_MANGROVE
+FTILE: t = floor_moss
 
 MAP
 xxxxxx.xxxx
@@ -1214,8 +1479,8 @@ x.........x
 xxxxxxxxxxx
 ENDMAP
 
-NAME: Frozen_lands_1
-TAGS: frozen_lands no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+NAME: Cave_1
+TAGS: cave no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
 
 MAP
 xxxxxxxxxxx
@@ -1230,7 +1495,7 @@ ENDMAP
 
 NAME: Rocky_Shore_1
 TAGS: rocky_shore no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
-KFEAT: sbpb = .
+KFEAT: sbp = .
 KFEAT: rd = x
 KFEAT: a = shallow_water
 FTILE: b = halo_dirt
@@ -1306,27 +1571,212 @@ FTILE: y = SHIP_TILE_36
 TILE: z = SHIP_TILE_55
 TILE: ! = SHIP_TILE_56
 FTILE: z! = shoals_deep_water
+KFEAT: )[]<>$%^ = .
+FTILE: )[]<>$%^ = tutorial_pad
+COLOUR: )[]<>/$%^ = lightblue
+MARKER: { = lua:tutorial6.msg("movement")
+MARKER: ) = lua:tutorial6.msg("viewing_messages")
+MARKER: [ = lua:tutorial6.msg("diagonal_movement")
+MARKER: ] = lua:tutorial6.msg("water")
+MARKER: < = lua:tutorial6.msg("weapons")
+MARKER: $ = lua:tutorial6.msg("combat_1")
+MARKER: % = lua:tutorial6.msg("combat_2")
+MARKER: ^ = lua:tutorial6.msg("food")
+KMONS: & = rat name:beach_rat name_replace always_corpse
+FTILE: & = halo_dirt
+KITEM: ( = long sword not_cursed mundane
+KITEM: / = ring mail not_cursed mundane
+FTILE: ( = tutorial_pad
+FTILE: / = SHIP_TILE_62
+KITEM: # = pair of boots mundane not_cursed useful
+FTILE: # = SHIP_TILE_62
+{{
+local rat_death_marker = TriggerableFunction:new {
+    func = "rat_death",
+    repeated = true,
+    data = {
+        num_killed = 0
+    }
+}
+
+local sword_move_marker = TriggerableFunction:new {
+    func = "sword_move",
+    repeated = true
+}
+
+local armour_pickup_marker = TriggerableFunction:new {
+    func = "armour_pickup"
+}
+
+local boots_pickup_marker = TriggerableFunction:new {
+    func = "boots_pickup"
+}
+
+rat_death_marker:add_triggerer(DgnTriggerer:new {
+    type = "monster_dies",
+    target = "beach rat"
+})
+
+sword_move_marker:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
+})
+
+armour_pickup_marker:add_triggerer(DgnTriggerer:new {
+    type = "item_pickup",
+    target = "ring mail"
+})
+
+boots_pickup_marker:add_triggerer(DgnTriggerer:new {
+    type = "item_pickup",
+    target = "pair of boots"
+})
+
+lua_marker("*", rat_death_marker)
+lua_marker("(", sword_move_marker)
+lua_marker("/", armour_pickup_marker)
+lua_marker("#", boots_pickup_marker)
+
+introduction_1 = "<yellow>As you rest in the cabin of your ship, you feel the ship steadily come to "
+                .. "a halt. 'Land ho! Land ho!' You hear from the deck just outside of your "
+                .. "cabin. It seems that the merchant ship you hired came through on its "
+                .. "promise to deliver you to the country of</yellow> <green>Grim Haven</green><yellow>, a land ripe with "
+                .. "monsters and ruined villages.</yellow>"
+
+introduction_2 = "<yellow>There is, however, one attraction that brings adventurers and civilians "
+                .. "alike to this desolate land:</yellow> <brown>The Arena</brown><yellow>. "
+                .. "The Arena is a proving ground filled with the dangerous monsters that "
+                .. "foolhardy merchants have gathered from the continent in order to provide "
+                .. "a spectacle for those who have scarcely witnessed monsters before.</yellow>"
+
+introduction_3 = "<yellow>Although it has this less than glorifying reputation, it has still served as a "
+                .. "gathering place for legendary heroes who wish to show their mettle.</yellow>"
+
+introduction_4 = "<yellow>Reputation gains are hardly important to you, but the opportunity to "
+                .. "face challenging monsters sets your blood on fire in a way that nothing "
+                .. "else can. And if you rid the world of a few of those savage beasts in the "
+                .. "process, all the better.</yellow>"
+
+introduction_5 = "<yellow>You have journeyed to this land to enter into the "
+                .. "arena and spill some blood. \n Good luck!</yellow>"
+crawl.more()
+crawl.mpr(introduction_1)
+crawl.more()
+crawl.mpr(introduction_2)
+crawl.more()
+crawl.mpr(introduction_3)
+crawl.more()
+crawl.mpr(introduction_4)
+crawl.more()
+crawl.mpr(introduction_5)
+crawl.more()
+}}
+KFEAT: * = .
+FTILE: * = floor_sand
+KFEAT: ? = shallow_water
+TILE: ? = shoals_shallow_water
 
 MAP
                            xxxxxxxxxxxxxx
                            xwwwwwzT!wwwwd
                            xwwwwmq5tnwwwd
-                           xwwwwkvRylwwwd
+                           xwwwwkv1ylwwwd
                            xwwwgi111jhwwd
-rrrrrrrrrxxxxxxxxxxxxxx..xxxwwwY31114Zwwd
-r..........................wwwwW11111Xwwd
-r.................wwwwwwwwwwwwwW11911Xwwd
-r.....wwwwwwwwwwwwwwwwwwwwwwwwwW11811Xwwd
-r....wwwwwwwwwwwwwwwwwwwwwwwwwwW11711Xwwd
-r......wwwwwwwwwwwww....wwwwwwwW11611Xwwd
-r......aaaaawwwww..bubbb.111111110001Xwwd
-r....bbbsssswwwwww..bbb..wwwwwwW1M1O1Xwwd
-r..bbbubbsss11111..bbbb..wwwwwwN1S2V1Pwwd
-r...bbbbssssaawww.bbbub.wwwwwwwM1Q2U1Owwd
+rrrrrrrrrxxxxxxxxxxxxxx..xxxwwwY3#114Zwwd
+r..........................wwwwW11911Xwwd
+r.................wwwwwwwwwwwwwW11811Xwwd
+r.)...wwwwwwwwwwwwwwwwwwwwwwwwwW1/711Xwwd
+r....wwwwwwwwwwwwwwwwwwwwwwwwwwW1(611Xwwd
+r..rrrrwwwwwwwwwwwww....wwwwwwwW10001Xwwd
+rrr....aaaaawwwww..bubbb.11$11111MRO1Xwwd
+r..[.bbbsssswwwwww.&bbbb.wwwwwwW<M1O1Xwwd
+r..b&bubbsss1???1].b&%b..wwwwwwN1S2V1Pwwd
+r&..bbb&ssssaawww.b&bub.wwwwwwwM{Q2U1Owwd
 r.bbbubsssaaawwwww.....wwwwwwwwJ11111Kwwd
-rsssssssaaawwwwwwwww..wwwwwwwwwHLLLLLIwwd
+rsss*sssaaawwwwwwwww..wwwwwwwwwHLLLLLIwwd
 daaaaaaaawwwwwwwwwwwwwwwwwwwwwwCAAAAABwwd
 dwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwDoooooFwwd
 dwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwEoooooGwwd
 ddddddddddddddddddddddddddddddddddddddddd
+ENDMAP
+
+NAME: Frozen_lands_1
+TAGS: frozen_lands no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+TILE: t = DNGN_TREE_DEAD
+KFEAT: abckl = .
+KFEAT: fghijJ = x
+FTILE: . = floor_woodground
+FTILE: a = floor_ice
+FTILE: b = floor_frozen
+KFEAT: Te = tree
+TILE: T = dngn_tree_red
+TILE: e = dngn_tree_yellow
+RTILE: x = wall_pebble_white
+FTILE: t = floor_ice
+FTILE: c = floor_pebble_white
+RTILE: f = wall_ice
+RTILE: g = wall_icy_stone
+RTILE: h = wall_ice_block
+RTILE: i = wall_brick_dark_6
+RTILE: j = wall_brick_dark_6_torch
+FTILE: k = floor_grey_dirt_b
+FTILE: l = SHIP_TILE_62
+KITEM: B = scroll of fog q:1
+KITEM: D = scroll of fear q:1
+KITEM: F = scimitar ego:venom not_cursed no_pickup
+KMONS: m = col:green goblin name:goblin_ambusher name_replace ; long sword
+KMONS: n = col:green goblin ; long sword
+FTILE: m = floor_ice
+FTILE: n = floor_ice
+RTILE: J = wall_ice_block
+FTILE: J = SHIP_TILE_62
+KFEAT: K = tree
+TILE: K = dngn_tree_dead
+KITEM: o = long sword mundane not_cursed, ring mail mundane not_cursed
+KITEM: p = potion of heal wounds q:3 no_pickup
+KFEAT: ABCDEFGHILMNOPQRS = .
+FTILE: ABCDEFGHILMNOPQRS = tutorial_pad
+COLOUR: ABCDEFGHILMNOPQRS = lightblue
+MARKER: B = lua:tutorial6.msg("identification")
+MARKER: C = lua:tutorial6.msg("help")
+MARKER: D = lua:tutorial6.msg("auto_pickup_2")
+MARKER: E = lua:tutorial6.msg("enchanted_items")
+MARKER: F = lua:tutorial6.msg("examining_items")
+MARKER: G = lua:tutorial6.msg("poisoned_weapons")
+MARKER: H = lua:tutorial6.msg("waiting")
+MARKER: I = lua:tutorial6.msg("tactics")
+{{
+local melt_ice_marker = TriggerableFunction:new {
+    func = "melt_ice",
+    repeated = true,
+    data = {
+        goblins_killed = 0
+    }
+}
+
+melt_ice_marker:add_triggerer(DgnTriggerer:new {
+    type = "monster_dies",
+    target = "goblin ambusher"
+})
+
+lua_marker("J", portal_desc{ice_block = 1})
+lua_marker("K", melt_ice_marker)
+}}
+
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xiiijiijiijiaaaxaaaaaaaaaaaaaax
+xikkkkkkkkaaaaaxaaaaaaaaaaaaaax
+xikkkkkkkkkaaaagaaaaaaaaaaaaaax
+xikkkkkkkkkkigbgbbbaaaaaaaaaaax
+xikkkkkkkkkkigbggbgggggaaaaaaax
+xiiiiii+iiiiigbbgbbbbbgggaaaaax
+xaaaaaaGaaawwggbgbbbbbbbgaaaaax
+xaaawwlwwwwwwwgbgbbbbbbbgaaaaax
+xwwwwwlwbwwwwwgbbbbbbbbggaaaaax
+xwnnaaaiiiwwwwggggggggggaaaaaax
+xwnnaaakkiwwwwbaDaaaaxaaaaaaaax
+xwaaEaakk+IJlbaattttCxaaaaaaaax
+xwwaFaaakiwwbaHataB..x........x
+xwwwwwwwwwwwbKamto...x........x
+xxxxxxxxxxxxxxxxxxx..xxx.xxxxxx
 ENDMAP
