@@ -320,6 +320,10 @@ static void _post_init(bool newc)
 #endif
 
 #ifdef USE_TILE
+    //TODO: Create menu in newgame.cc, similar to other submenus. Or
+    //at least the code will be there, but the menu itself may be in
+    //menu.cc. Create an if statement here that will check for hero mode
+    //and create player according to what they picked.
     init_player_doll();
 
     tiles.resize();
@@ -433,6 +437,7 @@ static void _construct_game_modes_menu(MenuScroller* menu)
     menu->attach_item(tmp);
     tmp->set_visible(true);
 
+//Start of defining the dungeon sprint menu item.
 #ifdef USE_TILE_LOCAL
     tmp = new TextTileItem();
     tmp->add_tile(tile_def(tileidx_gametype(GAME_TYPE_SPRINT), TEX_GUI));
@@ -502,6 +507,22 @@ static void _construct_game_modes_menu(MenuScroller* menu)
     // item height obtained from max.y - min.y
     tmp->set_bounds(coord_def(1, 1), coord_def(1, 2));
     tmp->set_description_text("View the high score list.");
+    menu->attach_item(tmp);
+    tmp->set_visible(true);
+
+#ifdef USE_TILE_LOCAL
+    tmp = new TextTileItem();
+    tmp->add_tile(tile_def(tileidx_gametype(GAME_TYPE_HERO_MODE), TEX_GUI));
+#else
+    tmp = new TextItem();
+#endif
+    text = "Hero Mode";
+    tmp->set_text(text);
+    tmp->set_fg_colour(WHITE);
+    tmp->set_highlight_colour(WHITE);
+    tmp->set_id(GAME_TYPE_HERO_MODE);
+    tmp->set_bounds(coord_def(1, 1), coord_def(1, 2));
+    tmp->set_description_text("Embark on an adventure to become the arena champion.");
     menu->attach_item(tmp);
     tmp->set_visible(true);
 }
@@ -849,6 +870,7 @@ again:
                 case GAME_TYPE_TUTORIAL:
                 case GAME_TYPE_SPRINT:
                 case GAME_TYPE_HINTS:
+                case GAME_TYPE_HERO_MODE:
                     // If a game type is chosen, the user expects
                     // to start a new game. Just blanking the name
                     // it it clashes for now.
@@ -887,6 +909,7 @@ again:
         case GAME_TYPE_TUTORIAL:
         case GAME_TYPE_SPRINT:
         case GAME_TYPE_HINTS:
+        case GAME_TYPE_HERO_MODE:
             trim_string(input_string);
             if (is_good_name(input_string, true, false))
             {
@@ -1023,7 +1046,8 @@ bool startup_step()
          && is_good_name(choice.name, false, false);
 
     if (crawl_state.last_type == GAME_TYPE_TUTORIAL
-        || crawl_state.last_type == GAME_TYPE_SPRINT)
+        || crawl_state.last_type == GAME_TYPE_SPRINT
+        || crawl_state.last_type == GAME_TYPE_HERO_MODE)
     {
         // this counts as showing the startup menu
         crawl_state.bypassed_startup_menu = false;

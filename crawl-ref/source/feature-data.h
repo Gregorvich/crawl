@@ -566,4 +566,32 @@ FOUNTAIN(DNGN_DRY_FOUNTAIN_BLOOD, "dry fountain", "non-fountain_blood", LIGHTGRE
     FFT_NONE, MF_STAIR_BRANCH,
 },
 
+{
+    DNGN_SPAWN_POINT, "ominous spot", "ominous_space",
+    NUM_DCHAR_TYPES, NUM_DCHAR_TYPES,
+    COLOUR_AND_MAP(MAGENTA),
+    FFT_NONE, MF_FLOOR,
+},
+
+{
+    DNGN_SHOPKEEPER, "trader", "shopkeeper",
+    NUM_DCHAR_TYPES, NUM_DCHAR_TYPES,
+    COLOUR_AND_MAP(YELLOW),
+    FFT_SOLID, MF_WALL,
+},
+
+{
+    DNGN_FURNITURE, "regular looking furniture", "furniture",
+    NUM_DCHAR_TYPES, NUM_DCHAR_TYPES,
+    COLOUR_AND_MAP(BROWN),
+    FFT_SOLID, MF_WALL,
+},
+
+{
+    DNGN_CIVILIAN, "regular civilian,", "civilian",
+    NUM_DCHAR_TYPES, NUM_DCHAR_TYPES,
+    COLOUR_AND_MAP(RED),
+    FFT_SOLID, MF_WALL,
+},
+
 };

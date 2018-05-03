@@ -644,6 +644,8 @@ string gametype_to_str(game_type type)
         return "sprint";
     case GAME_TYPE_HINTS:
         return "hints";
+    case GAME_TYPE_HERO_MODE:
+        return "hero_mode";
     default:
         return "none";
     }

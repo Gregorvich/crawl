@@ -1025,3 +1025,23 @@ This area is bathed in translocational energy, causing creatures to blink away
 from the originator of the energy with an increasing chance the closer they are
 to the caster.
 %%%%
+########################################################################
+### Hero Mode
+########################################################################
+A spot with an ominous presence
+
+A familiar spot where undead residual energy appears to condense. You can't help
+but feel as though you have an intimate connection with this area. You can just
+make out gatherings of spirits and wisps.
+%%%%
+A Trader
+
+Perhaps this person may be willing to depart with valuables in exchange for gold?
+%%%%
+A citizen
+
+Just an ordinary citizen.
+%%%%
+Some furniture
+
+Some nicely kept furniture. It's nice to find comfort in such as desolate place.

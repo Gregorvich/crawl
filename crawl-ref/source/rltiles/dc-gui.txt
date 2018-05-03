@@ -16,6 +16,9 @@ dungeon_sprint STARTUP_SPRINT
 instructions STARTUP_INSTRUCTIONS
 arena STARTUP_ARENA
 high_scores STARTUP_HIGH_SCORES
+hero_mode STARTUP_HERO_MODE1
+hero_mode_3 STARTUP_HERO_MODE2
+hero_mode_4 STARTUP_HERO_MODE3
 
 %include dc-spells.txt
 

@@ -610,6 +610,22 @@ bool feat_is_fountain(dungeon_feature_type feat)
            || feat == DNGN_DRY_FOUNTAIN;
 }
 
+bool feat_is_spawn_point(dungeon_feature_type feat)
+{
+    return feat == DNGN_SPAWN_POINT;
+}
+
+bool feat_is_person(dungeon_feature_type feat)
+{
+    return feat == DNGN_SHOPKEEPER
+           || feat == DNGN_CIVILIAN;
+}
+
+bool feat_is_furniture(dungeon_feature_type feat)
+{
+    return feat == DNGN_FURNITURE;
+}
+
 /** Is this feature non-solid enough that you can reach past it?
  */
 bool feat_is_reachable_past(dungeon_feature_type feat)
@@ -1915,6 +1931,8 @@ const char* feat_type_name(dungeon_feature_type feat)
         return "shop";
     if (feat_is_fountain(feat))
         return "fountain";
+    if (feat_is_spawn_point(feat))
+        return "spawn point";
     if (feat == DNGN_UNSEEN)
         return "unknown terrain";
     return "floor";

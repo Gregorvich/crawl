@@ -372,6 +372,7 @@ static void _give_basic_knowledge()
 static void _setup_normal_game();
 static void _setup_tutorial(const newgame_def& ng);
 static void _setup_sprint(const newgame_def& ng);
+static void _setup_hero_mode(const newgame_def& ng);
 static void _setup_hints();
 static void _setup_generic(const newgame_def& ng);
 
@@ -391,6 +392,9 @@ void setup_game(const newgame_def& ng)
         break;
     case GAME_TYPE_SPRINT:
         _setup_sprint(ng);
+        break;
+    case GAME_TYPE_HERO_MODE:
+        _setup_hero_mode(ng);
         break;
     case GAME_TYPE_HINTS:
         _setup_hints();
@@ -424,6 +428,14 @@ static void _setup_tutorial(const newgame_def& ng)
  * Special steps that sprint needs;
  */
 static void _setup_sprint(const newgame_def& ng)
+{
+    // nothing currently
+}
+
+/**
+ * Special steps that hero mode needs;
+ */
+static void _setup_hero_mode(const newgame_def& ng)
 {
     // nothing currently
 }

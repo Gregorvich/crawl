@@ -610,7 +610,8 @@ bool game_state::game_is_hints_tutorial() const
 
 bool game_state::game_is_hero_mode() const
 {
-    return game_is_hero_mode();
+    ASSERT(type < NUM_GAME_TYPE);
+    return type == GAME_TYPE_HERO_MODE;
 }
 
 string game_state::game_type_name() const
@@ -634,7 +635,7 @@ string game_state::game_type_name_for(game_type _type)
         return "Arena";
     case GAME_TYPE_SPRINT:
         return "Dungeon Sprint";
-    case GAME_TYPE_HERO_MODE
+    case GAME_TYPE_HERO_MODE:
         return "Hero Mode";
     }
 }
@@ -652,5 +653,7 @@ string game_state::game_type_qualifier() const
         return "-tutorial";
     if (crawl_state.game_is_hints())
         return "-hints";
+    if (crawl_state.game_is_hero_mode())
+        return "-hero mode";
     return "";
 }

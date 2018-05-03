@@ -1644,7 +1644,7 @@ static void tag_construct_you(writer &th)
     CANARY;
 
     // don't let vault caching errors leave a normal game with sprint scoring
-    if (!crawl_state.game_is_sprint())
+    if (!crawl_state.game_is_sprint() && !crawl_state.game_is_hero_mode())
         ASSERT(!_calc_score_exists());
 
     if (!dlua.callfn("dgn_save_data", "u", &th))

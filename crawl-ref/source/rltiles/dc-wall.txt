@@ -863,6 +863,21 @@ church3
 %weight 4
 church4
 
+# Tiles for gates
+%sdir dngn/wall/gates
+graveyard_gate_ne GRAVEYARD_GATE_NE
+graveyard_gate_nw GRAVEYARD_GATE_NW
+graveyard_gate_se GRAVEYARD_GATE_SE
+graveyard_gate_sw GRAVEYARD_GATE_SW
+graveyard_gate_wall_bottom GRAVEYARD_GATE_WALL_BOTTOM
+
+# Tiles for cottage in graveyard
+%sdir dngn/wall/cottage
+cottage_wall COTTAGE_WALL
+cottage_wall_cracked COTTAGE_WALL_CRACKED
+cottage_wall_cracked_2 COTTAGE_WALL_CRACKED_2
+cottage_wall_torch COTTAGE_WALL_TORCH
+
 %sdir dngn/wall/abyss
 abyss0 WALL_ABYSS WALL_ABYSS_RED
 abyss1

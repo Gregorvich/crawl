@@ -182,29 +182,30 @@ crumbled_column_6
 # Statues in Dis
 statue_iron DNGN_STATUE_IRON
 
-# NPCs. Doesn't make much sense to call them statues, but you can see
-# past them and they are mostly stationary, so it kind of makes sense.
-# Maybe create a separate feature for npcs at some point.
-%sdir dngn/statues/npcs
-npc_1 SHOPKEEPER_1
-npc_2 SHOPKEEPER_2
-npc_3 SHOPKEEPER_3
+%sdir dngn/npcs/citizens
+# Citizens
 human_male_main_character HERO_M
 human_female_main_character HERO_F
 human_female_blonde FEMALE_BLONDE
-human_female_innkeeper FEMALE_INNKEEPER
 human_female_red_head FEMALE_RED_HEAD
-human_male_black_innkeeper MALE_INNKEEPER
-human_male_blacksmith MALE_BLACKSMITH
 human_male_dude SOME_DUDE
 human_male_gold GOLDEN_KNIGHT
 human_male_hippi MALE_KILT
 human_male_knight SILVER_KNIGHT
 human_male_knight_2 ARENA_GUARD
+gravekeeper GRAVEKEEPER
 
-# Furniture. Makes more sense to put them here than NPCs but would still
-# be nice if they were their own separate feature.
-%sdir dngn/statues/furniture
+%sdir dngn/npcs/shopkeepers
+# Shopkeepers
+npc_1 SHOPKEEPER_1
+npc_2 SHOPKEEPER_2
+npc_3 SHOPKEEPER_3
+human_male_black_innkeeper MALE_INNKEEPER
+human_female_innkeeper FEMALE_INNKEEPER
+human_male_blacksmith MALE_BLACKSMITH
+
+# Furniture
+%sdir dngn/furniture
 alchemy_table ALCHEMY_TABLE
 bench BENCH
 table TABLE_CAKE
@@ -267,6 +268,8 @@ chair_1 CHAIR_1
 chair_2 CHAIR_2
 chair_3 CHAIR_3
 chair_4 CHAIR_4
+worn_bed_bottom WORN_BED_BOTTOM
+worn_bed_top WORN_BED_TOP
 
 fruit_empty_1 FRUIT_EMPTY_1
 fruit_empty_2 FRUIT_BOTTOM
@@ -284,15 +287,21 @@ misc_bottle_blue POTION_BOTTLE_BLUE
 scroll_old SCROLL_OLD
 scroll_brown SCROLL_BROWN
 
-# Structures. They are put here mostly because we want them to be see
-# through. It would be weird for example to design a side of a building
-# only to not be able to see the middle part of it because the sides are
-# "covering" it.
-%sdir dngn/statues/structures
+# Structures. Are called furniture since there aren't really any differences
+# between the two in terms of attributes.
+# TODO: Create features for each different type of structure i.e. one
+# for ship parts.
+%sdir dngn/structures
 sand_wall SAND_WALL_WOOD
+cottage_wall_window COTTAGE_WALL_WINDOW
+cottage_wall_window_2 COTTAGE_WALL_WINDOW_2
+graveyard_gate_wall_top GRAVEYARD_GATE_WALL_TOP
+graveyard_grass_log_middle GRAVEYARD_GRASS_LOG_MIDDLE
+graveyard_grass_log_edge_left GRAVEYARD_GRASS_LOG_EDGE_LEFT
+graveyard_grass_log_edge_right GRAVEYARD_GRASS_LOG_EDGE_RIGHT
 
 # Ship parts
-%sdir dngn/statues/ship
+%sdir dngn/structures/ship
 ship_tile_2 SHIP_TILE_2
 ship_tile_3 SHIP_TILE_3
 ship_tile_4 SHIP_TILE_4
@@ -465,6 +474,19 @@ shop_gadgets SHOP_GADGETS
 %back none
 %shrink 1
 abandoned_shop DNGN_ABANDONED_SHOP
+
+# Shop panels for shops in hero mode
+%sdir dngn/shops/shop_panels
+shop_panel_archery SHOP_PANEL_ARCHERY
+shop_panel_armour SHOP_PANEL_ARMOUR
+shop_panel_books SHOP_PANEL_BOOKS
+shop_panel_food SHOP_PANEL_FOOD
+shop_panel_jewelry SHOP_PANEL_JEWELRY
+shop_panel_misc SHOP_PANEL_MISC
+shop_panel_potions SHOP_PANEL_POTIONS
+shop_panel_scrolls SHOP_PANEL_SCROLLS
+shop_panel_staves SHOP_PANEL_STAVES
+shop_panel_weapons SHOP_PANEL_WEAPONS
 
 %sdir dngn/gateways
 %rim 0

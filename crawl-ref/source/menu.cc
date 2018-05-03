@@ -98,7 +98,7 @@ int Popup::pop()
 {
     return tiles.draw_popup(this);
 }
-#endif
+
 
 class MenuDisplay
 {

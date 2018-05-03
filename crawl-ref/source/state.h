@@ -197,6 +197,7 @@ public:
     bool game_is_sprint() const;
     bool game_is_hints() const;
     bool game_is_hints_tutorial() const;
+    bool game_is_hero_mode() const;
 
     // Save subdirectory used for games such as Sprint.
     string game_type_name() const;

@@ -1,0 +1,155 @@
+# Utility functions
+
+lua {{
+
+function random_bazaar_colour()
+  local colours = {"blue", "red", "lightblue", "magenta", "green"}
+  local ret = colours[crawl.random2(#colours) + 1]
+
+  return ret
+end
+
+function set_bazaar_tiles()
+
+  dgn.change_floor_colour(random_bazaar_colour())
+
+  local default = {rock="wall_vault", floor="floor_vault"}
+  local tileset = {
+    blue = {rock="wall_brick_gray", floor="floor_grass"},
+    red = {rock="wall_pebble_red", floor="floor_vault"},
+    lightblue = {rock="wall_pebble_lightblue", floor="floor_grass"},
+    magenta = {rock="wall_stone_gray", floor="floor_dirt"},
+    green = {rock="wall_stone_gray", floor="floor_grass"},
+  }
+
+  local tile = tileset[dgn.get_floor_colour()]
+  if (tile == nil) then
+    tile = default
+  end
+
+  dgn.change_floor_tile(tile.floor)
+  dgn.change_rock_tile(tile.rock)
+end
+}}
+
+# Maps
+
+NAME: grassy_plain
+TAGS: hero_mode no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+DESC: A Grassy Plain
+ORDER: 10
+ORIENT: encompass
+KMONS: A = 12-headed hydra
+KMONS: B = kobold
+KMONS: P = bat
+ITEM: any armour, any weapon
+FTILE: . = floor_grass
+FTILE: t = floor_grass
+FTILE: T = floor_grass
+FTILE: B = floor_grass
+FTILE: % = floor_grass
+FTILE: $ = floor_grass
+FTILE: A = floor_grass
+FTILE: * = floor_grass
+FTILE: d = floor_grass
+FTILE: e = floor_grass
+FTILE: P = floor_grass
+FTILE: | = floor_grass
+SUBVAULT: H : house
+SUBVAULT: b : bazaar
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xttttttttttttttttttttttttttttttttttttttttttttttttttttttttx
+xtttttttttttt.tttttttttttttttttttttttttttttttttttttttttttx
+xtttttt.ttttt.tttt.ttttttttttttctttt.tt$ttttt.$$$$......tx
+xt..................B....B....txtt*..tt..tttt.......P...tx
+xt..t.t.....%.......t.........tttttt.ttt.tttt...........tx
+xtttt....t..............B........................P......tx
+xt.de....T....................tttttt.tttttttt...........tx
+xt........$...................txtttt...P$tttt....P..||..tx
+xt.....{...........HHHHHHHHH..ttttttttttttttt...........tx
+xt.................HHHHHHHHH..txxxxxxxxxxxxxt...........tx
+xt......t..........HHHHHHHHH..txxxxxxxxxxxxxt...........tx
+xt.................HHHHHHHHH..txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwww.........HHHHHHHHH..txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwww..t......HHHHHHHHH..txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwww........HHHHHHHHH..txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwww...................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwww...................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt.wwwwwwww.............B.....txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt............B...............txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt..B.t..t....t...........*...txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt....tt..t...................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt.....t.$$...................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xt............................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwww.....................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwww...................txbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwww.........A.wwwwwtxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwwwwwwwwwwwwwwwwwwwtxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwwwwwwwwwwwwwwwwwwwtxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwwwwwwwwwwwwwwwwwwwtxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwwwwwwwwwwwwwwwwwwwtxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xtwwwwwwwwwwwwwwwwwwwwwwwwwwwtxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xttttttttttttttttttttttttttttttxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+ENDMAP
+
+NAME: house_1
+TAGS: house no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KMONS: O = kobold name:Durwent_the_Legendary_Kobold name_replace
+KITEM: Z = Orb of Zot
+FTILE: . = floor_pebble_blue
+FTILE: Z = floor_pebble_blue
+FTILE: % = floor_pebble_blue
+FTILE: O = floor_pebble_blue
+MAP
+xxxx+xxxx
+x.......x
+x.......x
+x.......x
+x.Z..O..x
+x......%x
+xxxxxxxxx
+ENDMAP
+
+NAME: bazaar_circle
+TAGS: bazaar no_rotate no_hmirror no_vmirror no_monster_gen
+SHUFFLE: ABCD, EFGH
+SUBST: H=W, A=T, B=T
+KFEAT: CDEFG = any shop
+KFEAT: < = stone_arch
+FTILE: . = floor_rough_blue
+FTILE: A = floor_rough_blue
+FTILE: B = floor_rough_blue
+FTILE: < = floor_rough_blue
+RTILE: x = wall_brick_yellow
+MAP
+xxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxx
+xx...xxxxxxxxxxx...xxxxxxxxxxx...xx
+x.....xxxxxxxxxx...xxxxxxxxxx.....x
+x..E..+.......+.....+.......+..H..x
+x.....xxxxxxxxx..D..xxxxxxxxx.....x
+xx...xxxxx....+.....+....xxxxx...xx
+xxx+xxx....xxxxx...xxxxx....xxx+xxx
+xxx.xx..xxxxxxxxx+xxxxxxxxx..xx.xxx
+xxx.x..xxxxxxxxxx+xxxxxxxxxx..x.xxx
+xxx+x+xxxxxxxxxx...xxxxxxxxxx+x+xxx
+xxx...xxxxxxxx.......xxxxxxxx...xxx
+xx.....xxxxxx.........xxxxxx.....xx
+xx..A..xxxxxT....<....Txxxxx..B...x
+xx.....xxxxxx.........xxxxxx.....xx
+xxx...xxxxxxxx.......xxxxxxxx...xxx
+xxx+x+xxxxxxxxxx...xxxxxxxxxx+x+xxx
+xxx.x..xxxxxxxxxx+xxxxxxxxxx..x.xxx
+xxx.xx..xxxxxxxxx+xxxxxxxxx..xx.xxx
+xxx+xxx....xxxxx...xxxxx....xxx+xxx
+xx...xxxxx....+.....+....xxxxx...xx
+x.....xxxxxxxxx..C..xxxxxxxxx.....x
+x..G..+.......+.....+.......+..F..x
+x.....xxxxxxxxxx...xxxxxxxxxx.....x
+xx...xxxxxxxxxxxxxxxxxxxxxxxxx...xx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP

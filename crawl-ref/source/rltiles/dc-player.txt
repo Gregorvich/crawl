@@ -17,6 +17,8 @@ human2_f
 human2_m
 human3_f
 human3_m
+human4_f
+human4_m
 elf_m ELF
 elf_f
 deep_elf_f DEEP_ELF
@@ -449,6 +451,7 @@ isildur ISILDUR
 pj PJ
 sam SAM
 vanhel1 VANHEL
+holy_knight HOLY_KNIGHT
 
 deep_troll_leather DEEP_TROLL_LEATHER
 iron_troll_leather IRON_TROLL_LEATHER
@@ -972,6 +975,12 @@ chopsticks CHOPSTICKS
 troll TROLL
 djinn1 DJINN1
 djinn2 DJINN2
+original_ponytail_m PONYTAIL_MALE
+original_ponytail_m2 PONYTAIL_MALE2
+original_ponytail_f PONYTAIL_FEMALE
+original_spiky SPIKY
+original_medium_m MEDIUM_MALE
+original_medium_f MEDIUM_FEMALE
 %end_ctg
 
 ###Beard
@@ -1012,6 +1021,7 @@ muttonchops_green MUTTONCHOPS_GREEN
 bushy_green BUSHY_GREEN
 pj PJ
 wizard WIZARD
+original_beard_short ORIGINAL_BEARD_SHORT
 %end_ctg
 
 ###Helms

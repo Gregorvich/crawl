@@ -168,6 +168,12 @@ void choose_tutorial_character(newgame_def& ng_choice)
     ng_choice.weapon = WPN_FLAIL;
 }
 
+void choose_hero_mode_character(newgame_def& ng_choice)
+{
+    ng_choice.species = SP_HUMAN;
+    ng_choice.job = JOB_HOLY_KNIGHT;
+}
+
 // March 2008: change order of species and jobs on character selection
 // screen as suggested by Markus Maier.
 // We have subsequently added a few new categories.
@@ -434,6 +440,13 @@ static void _choose_char(newgame_def& ng, newgame_def& choice,
         choice.allowed_species.clear();
         choice.allowed_weapons.clear();
     }
+    else if (ng.type == GAME_TYPE_HERO_MODE)
+    {
+        choose_hero_mode_character(choice);
+        choice.allowed_jobs.clear();
+        choice.allowed_species.clear();
+        choice.allowed_weapons.clear();
+    }
     else if (ng.type == GAME_TYPE_HINTS)
     {
         pick_hints(choice);
@@ -576,7 +589,8 @@ bool choose_game(newgame_def& ng, newgame_def& choice,
     ng.map  = choice.map;
 
     if (ng.type == GAME_TYPE_SPRINT
-        || ng.type == GAME_TYPE_TUTORIAL)
+        || ng.type == GAME_TYPE_TUTORIAL
+        || ng.type == GAME_TYPE_HERO_MODE)
     {
         _choose_gamemode_map(ng, choice, defaults);
     }
@@ -1940,6 +1954,21 @@ static bool _cmp_map_by_order(const map_def* m1, const map_def* m2)
 {
     return m1->order < m2->order
            || m1->order == m2->order && m1->desc_or_name() < m2->desc_or_name();
+}
+
+static void prompt_character_selection(newgame_def& ng, newgame_def& ng_choice,
+                                const newgame_def& defaults,
+                                mapref_vector maps)
+{
+    PrecisionMenu menu;
+    menu.set_select_type(PrecisionMenu::PRECISION_SINGLESELECT);
+    MenuFreeform* freeform = new MenuFreeform();
+    freeform->init(coord_def(1, 1), coord_def(get_number_of_cols(),
+                    get_number_of_lines()), "freeform");
+
+    freeform->allow_focus(false);
+    menu.attach_object(freeform);
+    menu.set_active_object(freeform);
 }
 
 static void _prompt_gamemode_map(newgame_def& ng, newgame_def& ng_choice,

@@ -53,7 +53,7 @@ sound_mapping check_sound_patterns(const string& message)
         // force_more_message?
         if (sound.pattern.matches(message))
         {
-            //play_sound(sound.soundfile.c_str(), sound.interrupt_game);
+            play_sound(sound.soundfile.c_str(), sound.interrupt_game);
             matched_sound = sound;
             break;
         }

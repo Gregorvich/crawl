@@ -20,12 +20,14 @@
 #include <unistd.h>
 #endif
 
+#include "act-iter.h"
 #include "artefact.h"
 #include "art-enum.h"
 #include "beam.h"
 #include "chardump.h"
 #include "cloud.h"
 #include "colour.h"
+#include "coordit.h"
 #include "delay.h"
 #include "describe.h"
 #include "dgn-event.h"
@@ -48,6 +50,7 @@
 #include "macro.h"
 #include "message.h"
 #include "mgen-data.h"
+#include "mon-behv.h"
 #include "mon-death.h"
 #include "mon-place.h"
 #include "mon-util.h"
@@ -68,9 +71,11 @@
 #include "spl-clouds.h"
 #include "spl-other.h"
 #include "spl-selfench.h"
+#include "spl-transloc.h"
 #include "state.h"
 #include "stringutil.h"
 #include "teleport.h"
+#include "terrain.h"
 #include "transform.h"
 #include "tutorial.h"
 #include "view.h"
@@ -726,6 +731,119 @@ static void _wizard_restore_life()
 }
 #endif
 
+static void restore_life_hero_mode()
+{
+    if (you.hp_max <= 0)
+        unrot_hp(9999);
+    while (you.hp_max <= 0)
+        you.hp_max_adj_perm++, calc_hp();
+    if (you.hp <= 0)
+        set_hp(you.hp_max);
+}
+
+static void _handle_teleport_update(bool large_change, const coord_def old_pos)
+{
+    if (large_change)
+    {
+        viewwindow();
+        for (monster_iterator mi; mi; ++mi)
+        {
+            const bool see_cell = you.see_cell(mi->pos());
+
+            if (mi->foe == MHITYOU && !see_cell && !you.penance[GOD_ASHENZARI])
+            {
+                mi->foe_memory = 0;
+                behaviour_event(*mi, ME_EVAL);
+            }
+            else if (see_cell)
+                behaviour_event(*mi, ME_EVAL);
+        }
+    }
+
+#ifdef USE_TILE
+    if (you.species == SP_MERFOLK)
+    {
+        const dungeon_feature_type new_grid = grd(you.pos());
+        const dungeon_feature_type old_grid = grd(old_pos);
+        if (feat_is_water(old_grid) && !feat_is_water(new_grid)
+            || !feat_is_water(old_grid) && feat_is_water(new_grid))
+        {
+            init_player_doll();
+        }
+    }
+#endif
+}
+
+static bool _cell_vetoes_teleport(const coord_def cell, bool check_monsters = true,
+                                  bool wizard_tele = false)
+{
+    // Monsters always veto teleport.
+    if (monster_at(cell) && check_monsters)
+        return true;
+
+    // As do all clouds; this may change.
+    if (cloud_at(cell) && !wizard_tele)
+        return true;
+
+    if (cell_is_solid(cell))
+        return true;
+
+    return is_feat_dangerous(grd(cell), true) && !wizard_tele;
+}
+
+static bool move_player_to_graveyard(const coord_def where_to, bool move_monsters)
+{
+    const coord_def old_pos = you.pos();
+    coord_def where = where_to;
+    coord_def old_where = where_to;
+
+    // Don't bother to calculate a possible new position if it's out of bounds.
+    if (!in_bounds(where))
+        return false;
+
+    if (_cell_vetoes_teleport(where))
+    {
+        if (monster_at(where) && move_monsters && !_cell_vetoes_teleport(where, false))
+        {
+            // dlua only, don't heed no_tele
+            monster* mons = monster_at(where);
+            mons->teleport(true);
+        }
+        else
+        {
+            for (adjacent_iterator ai(where); ai; ++ai)
+            {
+                if (!_cell_vetoes_teleport(*ai))
+                {
+                    where = *ai;
+                    break;
+                }
+                else
+                {
+                    if (monster_at(*ai) && move_monsters
+                            && !_cell_vetoes_teleport(*ai, false))
+                    {
+                        monster* mons = monster_at(*ai);
+                        mons->teleport(true);
+                        where = *ai;
+                        break;
+                    }
+                }
+            }
+            // Give up, we can't find a suitable spot.
+            if (where == old_where)
+                return false;
+        }
+    }
+
+    bool large_change = you.see_cell(where);
+
+    move_player_to_grid(where, false);
+
+    _handle_teleport_update(large_change, old_pos);
+    return true;
+}
+
 static int _apply_extra_harm(int dam, mid_t source)
 {
     monster* damager = monster_by_mid(source);
@@ -1052,8 +1170,34 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
     }
 #endif  // WIZARD
 
-    if (crawl_state.game_is_hero_mode()) {
-        //Function the same as wizard mode, but spawn player somewhere
+    if (crawl_state.game_is_hero_mode() && !non_death) {
+        canned_msg(MSG_YOU_DIE_HERO_MODE);
+        if (yesno("Respawn?", false, 'y'))
+        {
+            coord_def spawn_point_pos;
+            bool spawn_point_found = false;
+            const int r = 0;
+            for (radius_iterator ri(you.pos(), r, C_SQUARE, LOS_DEFAULT); ri; ++ri)
+            {
+                dungeon_feature_type feature = grd(*ri);
+                if (feat_is_spawn_point(feature)) {
+                    spawn_point_pos = *ri;
+                    spawn_point_found = true;
+                    break;
+                }
+            }
+            if (spawn_point_found)
+            {
+                move_player_to_graveyard(spawn_point_pos, true);
+                restore_life_hero_mode();
+                return;
+            } else {
+                if(yesno("unable to find spawn point. Respawn here?", false, 'y')) {
+                    restore_life_hero_mode();
+                    return;
+                }
+            }
+        }
     }
 
     if (crawl_state.game_is_tutorial())

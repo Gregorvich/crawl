@@ -1604,7 +1604,7 @@ void scorefile_entry::init(time_t dt)
         points = pt;
     }
     else
-        ASSERT(crawl_state.game_is_sprint());
+        ASSERT(crawl_state.game_is_sprint() || crawl_state.game_is_hero_mode());
         // only sprint should use custom scores
 
     race = you.species;

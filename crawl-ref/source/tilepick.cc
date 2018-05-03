@@ -3249,6 +3249,8 @@ tileidx_t tileidx_gametype(const game_type gtype)
         return TILEG_STARTUP_ARENA;
     case GAME_TYPE_HIGH_SCORES:
         return TILEG_STARTUP_HIGH_SCORES;
+    case GAME_TYPE_HERO_MODE:
+        return TILEG_STARTUP_HERO_MODE3;
     default:
         return TILEG_ERROR;
     }

@@ -1800,6 +1800,11 @@ void canned_msg(canned_message_type which_message)
         case MSG_YOU_DIE:
             mpr_nojoin(MSGCH_PLAIN, "You die...");
             break;
+        case MSG_YOU_DIE_HERO_MODE:
+            mpr_nojoin(MSGCH_PLAIN, "<red>You have been killed.</red>");
+            break;
+        case MSG_RESPAWN:
+            mpr("You find yourself in a strangely familiar location surrounded by the dead.");
         case MSG_GHOSTLY_OUTLINE:
             mpr("You see a ghostly outline there, and the spell fizzles.");
             break;
