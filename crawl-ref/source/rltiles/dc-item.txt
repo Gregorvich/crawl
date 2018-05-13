@@ -392,6 +392,8 @@ pearl_dragon_armour ARM_PEARL_DRAGON_ARMOUR
 deep_troll_leather DEEP_TROLL_LEATHER
 iron_troll_leather IRON_TROLL_LEATHER
 
+hunters_armour_1 HUNTERS_ARMOUR_1
+
 %rim 1
 cloak1_leather ARM_CLOAK
 cloak2
@@ -443,6 +445,7 @@ lshield_louise LSHIELD_LOUISE
 #####ARM_HELMET
 elven_leather_helm THELM_CAP
 cap_jester THELM_CAP_JESTER
+cowl_1 COWL_1
 
 %rim 0
 hat1 THELM_HAT

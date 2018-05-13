@@ -40,6 +40,7 @@
 #include "god-passive.h"
 #include "god-prayer.h"
 #include "god-wrath.h"
+#include "hero-mode.h"
 #include "hints.h"
 #include "hiscores.h"
 #include "invent.h"
@@ -2463,6 +2464,9 @@ bool gain_piety(int original_gain, int denominator, bool should_scale_piety)
 
     if (crawl_state.game_is_sprint() && should_scale_piety)
         pgn = sprint_modify_piety(pgn);
+
+    if (crawl_state.game_is_hero_mode() && should_scale_piety)
+        pgn = hero_mode_modify_piety(pgn);
 
     pgn = div_rand_round(pgn, denominator);
     while (pgn-- > 0)

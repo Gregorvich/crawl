@@ -203,6 +203,7 @@ npc_3 SHOPKEEPER_3
 human_male_black_innkeeper MALE_INNKEEPER
 human_female_innkeeper FEMALE_INNKEEPER
 human_male_blacksmith MALE_BLACKSMITH
+elf_male_bowsman ELF_MALE_BOWSMAN
 
 # Furniture
 %sdir dngn/furniture
@@ -242,6 +243,11 @@ shelf_weapon_1 SHELF_WEAPON_1
 shelf_weapon_2 SHELF_WEAPON_2
 shelf_book SHELF_BOOK
 shelf_key SHELF_KEY
+shelf_bow SHELF_BOW
+shelf_side_arrows SHELF_SIDE_ARROWS
+shelf_side_bow SHELF_SIDE_BOW
+shelf_side_crossbow SHELF_SIDE_CROSSBOW
+shelf_side_tomahawks SHELF_SIDE_TOMAHAWKS
 
 table_1 TABLE_FOOD
 table_2 TABLE_CLEAR

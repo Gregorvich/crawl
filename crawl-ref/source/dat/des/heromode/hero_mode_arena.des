@@ -3,18 +3,22 @@
 -- Arena functions. Many, many functions, including ones that will spawn
 -- enemies, run the countdown, declare which enemies to use for the rounds,
 -- and the Triggerable Function definition itself.
-function is_boss_round(round_id)
+function is_boss_round_2(round_id)
     return round_id % 5 == 0
 end
 
-function spawn_enemies(data)
+function hero_mode_spawn_enemies(data)
+    -- Find all of the slaves of the triggerable
     local sp = dgn.find_marker_positions_by_prop(data.spawn_dir, 1)
+    -- Go through each of our slaves
     for _, pos in ipairs(sp) do
         if data.num_spawned >= data.round_enemies then
             break
         end
+        -- Randomly decide whether a monster will spawn in this slave or not
         if crawl.one_chance_in(#sp) then
-            if is_boss_round(data.round_id) and not data.boss_spawned then
+            if is_boss_round_2(data.round_id) and not data.boss_spawned then
+                -- Monster set 2 is the one that contains bosses
                 local enemy = dgn.create_monster(pos.x, pos.y, data.monster_set[2])
                 if enemy == nil then
                     crawl.mpr("Couldn't find a boss!")
@@ -47,7 +51,7 @@ function spawn_enemies(data)
     end
 end
 
-function end_round(data)
+function hero_mode_end_round(data)
     -- Always say we are between rounds after finishing a round,
     -- that way the arena will start off like this if we finish
     -- a boss fight and come back later
@@ -55,13 +59,15 @@ function end_round(data)
     local you_x, you_y = you.pos()
 
     -- Place award for killing boss
-    if is_boss_round(data.round_id) then
+    if is_boss_round_2(data.round_id) then
         crawl.mpr("A rune of Zot has appeared.", "orb")
+        -- Runes are placed in the third component of monster sets
         dgn.create_item(you_x, you_y, data.monster_set[3])
         data.finished = true
         -- We get 10 turns to prepare when we eventually re-enter the
         -- arena
         data.time_left = 100
+        -- Allow the person to leave after a boss round
         local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
         dgn.terrain_changed(entry_position.x, entry_position.y, "floor", false, false, false)
     else
@@ -69,13 +75,13 @@ function end_round(data)
         data.time_left = 150
     end
 
-    -- Scoring
+    -- Scoring. Maybe add some interface for scoring so that players will feel more of an impact
     local style_gain = (1 + data.num_killed) * data.round_id
     local gold_gain = 10 * data.round_id
 
     if data.num_killed >= data.round_enemies then
         data.style_mult = data.style_mult + 1
-        if is_boss_round(data.round_id) then
+        if is_boss_round_2(data.round_id) then
             crawl.mpr("<yellow>Victory achieved!</yellow>", "warning")
             crawl.mpr("<yellow>You have won a prize for killing the boss.</yellow>", "warning")
             -- Some extra score multiplier for killing the boss, since
@@ -106,8 +112,7 @@ function end_round(data)
     dgn.create_item(you_x, you_y, "gold q:" .. gold_gain)
 
     -- Dismisses the remaining monsters, including your allies
-    local gxm, gym = dgn.max_bounds()
-    for p in iter.rect_iterator(dgn.point(1, 1), dgn.point(gxm - 2, gym - 2)) do
+    for p in iter.rect_iterator(dgn.point(1, 17), dgn.point(22, 38)) do
         local enemy = dgn.mons_at(p.x, p.y)
         if enemy then
             dgn.apply_area_cloud(p.x, p.y, 5, 10, 1, 1,
@@ -126,7 +131,7 @@ function end_round(data)
     end
 end
 
-function ominous_countdown(time_left, waiting)
+function hero_mode_ominous_countdown(time_left, waiting)
     if not waiting then
         if time_left > 0 and (time_left == 500
                              or time_left == 200
@@ -146,28 +151,26 @@ end
 
 -- Set the monster sets that can be used for rounds. Lots of monsters and
 -- randomization.
-function get_monster_set(round, boss)
+function hero_mode_get_monster_set(round, boss)
     if not boss then
         local mon_set = {}
         
---        if round == 1 and crawl.coinflip() then
---            return {"place:D:2 / place:D:4 / w:4 sigmund / w:2 jessica / w:2 terence"}
---        elseif round <= 2 then
---            mon_set = {
---                "place:D:3 / place:D:5 / w:4 sigmund / w:2 jessica / w:2 terence",
---                "goblin / hobgoblin / kobold / big kobold / ijyb w:6 / pikel w:4",
---                "rat / quokka / river rat / porcupine / w:2 hell rat / w:6 purgy",
---                "ball python / adder w:15 / water moccasin w:5",
---                "orc w:40 / orc wizard w:8 / orc priest w:5 / w:5 orc warrior / blork the orc",
---                "gnoll w:35 / hound w:5 / gnoll sergeant / gnoll shaman / crazy yiuf",
---                "lesser demon w:30 / grinder w:3 / w:2 eustachio",
---                "zombie / skeleton / wight w:5 / necrophage / phantom w:5",
---                "worker ant / soldier ant w:2 / queen ant w:1 / killer bee w:2",
---                "ooze / w:5 jelly",
---                "giant cockroach w:20 / scorpion / worm"
---            }
-        if round <= 5 then
-            mon_set = {"goblin / hobgoblin / rat / kobold / bat"}
+        if round == 1 and crawl.coinflip() then
+            return {"place:D:2 / place:D:4 / w:4 sigmund / w:2 jessica / w:2 terence"}
+        elseif round <= 2 then
+            mon_set = {
+                "place:D:3 / place:D:5 / w:4 sigmund / w:2 jessica / w:2 terence",
+                "goblin / hobgoblin / kobold / big kobold / ijyb w:6 / pikel w:4",
+                "rat / quokka / river rat / porcupine / w:2 hell rat / w:6 purgy",
+                "ball python / adder w:15 / water moccasin w:5",
+                "orc w:40 / orc wizard w:8 / orc priest w:5 / w:5 orc warrior / blork the orc",
+                "gnoll w:35 / hound w:5 / gnoll sergeant / gnoll shaman / crazy yiuf",
+                "lesser demon w:30 / grinder w:3 / w:2 eustachio",
+                "zombie / skeleton / wight w:5 / necrophage / phantom w:5",
+                "worker ant / soldier ant w:2 / queen ant w:1 / killer bee w:2",
+                "ooze / w:5 jelly",
+                "giant cockroach w:20 / scorpion / worm"
+            }
         elseif round <= 5 then
             mon_set = {
                 -- Branches: D, Orc, Elf, Lair, Shoals, Swamp, Spider, Snake, Slime,
@@ -605,23 +608,22 @@ function get_monster_set(round, boss)
     end
 end
 
-function init_boss_table()
+function hero_mode_init_boss_table()
     local bs = {}
-    -- if crawl.coinflip() then
-    -- bs[1] = {"place:Snake", "aizul hd:7 hp:120 / " ..
-    --             "naga warrior name:naga_warlord n_rpl n_des n_noc col:cyan hp:130 / " ..
-    --             "anaconda name:giant n_adj n_noc hp:130 col:lightred",
-    --             "serpentine rune of zot"}
-    -- else
---        bs[1] = {"place:Swamp", "the lernaean hydra / " ..
---                 "wizard name:witch n_rpl n_des n_noc col:green hp:130 " ..
---                   "spells:mephitic_cloud.15.wizard;" ..
---                          "summon_hydra.15.wizard;" ..
---                          "invisibility.15.wizard;" ..
---                          "teleport_self.15.wizard.emergency",
---                 "decaying rune of zot"}
---    end
-    bs[1] = {"place:Snake", "kobold", "decaying rune of zot"}
+    if crawl.coinflip() then
+    bs[1] = {"place:Snake", "aizul hd:7 hp:120 / " ..
+             "naga warrior name:naga_warlord n_rpl n_des n_noc col:cyan hp:130 / " ..
+             "anaconda name:giant n_adj n_noc hp:130 col:lightred",
+             "serpentine rune of zot"}
+    else
+        bs[1] = {"place:Swamp", "the lernaean hydra / " ..
+                 "wizard name:witch n_rpl n_des n_noc col:green hp:130 " ..
+                   "spells:mephitic_cloud.15.wizard;" ..
+                          "summon_hydra.15.wizard;" ..
+                          "invisibility.15.wizard;" ..
+                          "teleport_self.15.wizard.emergency",
+                 "decaying rune of zot"}
+    end
 
     if crawl.coinflip() then
         bs[2] = {"place:Spider", "arachne hp:250 / " ..
@@ -685,7 +687,7 @@ function init_boss_table()
     return bs
 end
 
-function manage_arena(data, triggerable, triggerer, marker, ev)
+function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
     if data.finished then
         return
     end
@@ -700,7 +702,7 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
         end
         if data.num_killed >= data.round_enemies then
             -- You win the round
-            end_round(data)
+            hero_mode_end_round(data)
         end
         return
     end
@@ -721,12 +723,12 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
     if triggerer.type == "turn" and triggerer.sub_type  == "countdown" then
         if data.between_rounds then
             data.time_left = data.time_left - 1
-            ominous_countdown(data.time_left, data.between_rounds)
+            hero_mode_ominous_countdown(data.time_left, data.between_rounds)
 
             if data.time_left <= 0 then
                 crawl.take_note("Round " .. data.round_id .. ".")
                 crawl.mpr("ROUND " .. data.round_id .. "!", "warning")
-                if is_boss_round(data.round_id) then
+                if is_boss_round_2(data.round_id) then
                     crawl.mpr("BOSS ROUND!", "warning")
                 else
                     crawl.mpr("FIGHT!", "warning")
@@ -738,7 +740,7 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
                 -- Non-boss rounds will contain more enemies and the number
                 -- for these rounds will be further randomized.
                 data.round_enemies = 5 + crawl.div_rand_round(data.round_id, 3)
-                if not is_boss_round(data.round_id) then
+                if not is_boss_round_2(data.round_id) then
                     data.round_enemies = data.round_enemies + crawl.random2(crawl.div_rand_round(data.round_id, 3))
                 end
                 crawl.dpr("Number to spawn: " .. data.round_enemies .. ".")
@@ -749,8 +751,8 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
                 data.num_killed = 0
                 data.num_spawned = 0
                 data.boss_spawned = false
-                data.monster_set = get_monster_set(data.round_id,
-                                                   is_boss_round(data.round_id))
+                data.monster_set = hero_mode_get_monster_set(data.round_id,
+                                                   is_boss_round_2(data.round_id))
 
                 -- 50% chance of picking a specific direction to spawn from, else
                 -- spawn from all four directions
@@ -771,7 +773,7 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
                 -- 300 turns have passed. The latter shouldn't happen very often, but
                 -- could if the portals get blocked.
                 data.time_left = data.time_left - 1
-                ominous_countdown(data.time_left, data.between_rounds)
+                hero_mode_ominous_countdown(data.time_left, data.between_rounds)
             else
                 data.spawn_timer = data.spawn_timer + 1
                 -- If round takes more than 100 turns, speed things up a lot
@@ -782,7 +784,11 @@ function manage_arena(data, triggerable, triggerer, marker, ev)
             end
 
             if data.spawn_timer % data.spawn_rate == 0 or data.num_spawned == 0 then
-                spawn_enemies(data)
+                hero_mode_spawn_enemies(data)
+            end
+
+            if data.time_left <= 0 then
+                hero_mode_end_round(data)
             end
         end
     end
@@ -790,7 +796,7 @@ end
 
 -- Returns two values: the score, and false to indicate that we don't
 -- want to add the default score.
-function calculate_score(won)
+function hero_mode_calculate_score(won)
     local points = dgn.persist.arena_style_points
     local runes = you.num_runes()
 
@@ -800,7 +806,7 @@ function calculate_score(won)
     return points, false
 end
 
-function start_arena(data, triggerable, triggerer, marker, ev)
+function hero_mode_start_arena(data, triggerable, triggerer, marker, ev)
     if not data.enabled then
         return
     end
@@ -814,7 +820,7 @@ function start_arena(data, triggerable, triggerer, marker, ev)
     data.enabled = false
 end
 
-function toggle_pressure_plate_2(data, triggerable, triggerer, marker, ev)
+function hero_mode_toggle_pressure_plate(data, triggerable, triggerer, marker, ev)
     local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
     local marker_1 = data.marker
     if data.arena_running then
@@ -823,8 +829,7 @@ function toggle_pressure_plate_2(data, triggerable, triggerer, marker, ev)
                   "start the next round.</blue>")
         marker_1.data.enabled = false
         data.arena_running = false
-        local gxm, gym = dgn.max_bounds()
-        for p in iter.rect_iterator(dgn.point(1, 1), dgn.point(gxm - 2, gym - 2)) do
+        for p in iter.rect_iterator(dgn.point(1, 17), dgn.point(22, 38)) do
             local items = dgn.items_at(p.x, p.y)
             if #items ~= 0 then
                 dgn.apply_area_cloud(p.x, p.y, 5, 10, 1, 1,
@@ -850,28 +855,28 @@ function tutorial6.msg(text)
     return tutorial_msg("tutorial6 " .. text)
 end
 
-function rat_death(data, triggerable, triggerer, marker, ev)
+function hero_mode_rat_death(data, triggerable, triggerer, marker, ev)
     data.num_killed = data.num_killed + 1
     if data.num_killed == 3 then
         crawl.tutorial_msg("tutorial6 food")
     end
 end
 
-function sword_move(data, triggerable, triggerer, marker, ev)
+function hero_mode_sword_move(data, triggerable, triggerer, marker, ev)
     crawl.tutorial_msg("tutorial6 picking_up_items")
     crawl.tutorial_msg("tutorial6 equipping_items")
     crawl.tutorial_msg("tutorial6 armour")
 end
 
-function armour_pickup(data, triggerable, triggerer, marker, ev)
+function hero_mode_armour_pickup(data, triggerable, triggerer, marker, ev)
     crawl.tutorial_msg("tutorial6 boots")
 end
 
-function boots_pickup(data, triggerable, triggerer, marker, ev)
+function hero_mode_boots_pickup(data, triggerable, triggerer, marker, ev)
     crawl.tutorial_msg("tutorial6 adventuring_1")
 end
 
-function raise_bridge(data, triggerable, triggerer, marker, ev)
+function hero_mode_raise_bridge(data, triggerable, triggerer, marker, ev)
     data.goblins_killed = data.goblins_killed + 1
     if data.goblins_killed == 2 then
         local my_slaves = dgn.find_marker_positions_by_prop("submerged_bridge", 1)
@@ -894,7 +899,7 @@ function raise_bridge(data, triggerable, triggerer, marker, ev)
     end
 end
 
-function melt_ice(data, triggerable, triggerer, marker, ev)
+function hero_mode_melt_ice(data, triggerable, triggerer, marker, ev)
     data.goblins_killed = data.goblins_killed + 1
     if data.goblins_killed == 1 then
         local ice_block_position = dgn.find_marker_positions_by_prop("ice_block", 1)[1]
@@ -1010,7 +1015,7 @@ TILE: a = wall_brick_brown
 #FTILE: 2 = floor_sand
 {{
     local arena_marker = TriggerableFunction:new {
-        func = "manage_arena",
+        func = "hero_mode_manage_arena",
         data = {
             num_killed = 0,
             num_spawned = 0,
@@ -1024,7 +1029,7 @@ TILE: a = wall_brick_brown
             finished = true,        -- Have we killed the boss for the set of rounds?
             monster_set = {},
             style_mult = 1,
-            spawn_dir = ""          -- Which spawn points will enemies come from?
+            spawn_dir = "",         -- Which spawn points will enemies come from?
         },
         repeated = true
     }
@@ -1043,7 +1048,7 @@ TILE: a = wall_brick_brown
     })
 
     local pressure_plate_2_marker = TriggerableFunction:new {
-        func = "start_arena",
+        func = "hero_mode_start_arena",
         data = {
             enabled = false,
             marker = arena_marker
@@ -1056,7 +1061,7 @@ TILE: a = wall_brick_brown
     })
 
     local pressure_plate_1_marker = TriggerableFunction:new {
-        func = "toggle_pressure_plate_2",
+        func = "hero_mode_toggle_pressure_plate",
         data = {
             arena_running = false,
             marker = pressure_plate_2_marker
@@ -1068,12 +1073,12 @@ TILE: a = wall_brick_brown
         type = "player_move"
     })
 
-    dgn.persist.boss_set = init_boss_table()
+    dgn.persist.boss_set = hero_mode_init_boss_table()
 
     -- Store this in dgn.persist rather than arena_marker.data because
-    -- this allows the function "calculate_score" to access it
+    -- this allows the function "hero_mode_calculate_score" to access it
     dgn.persist.arena_style_points = 0
-    dgn.persist.calc_score = global_function("calculate_score");
+    dgn.persist.calc_score = global_function("hero_mode_calculate_score");
 
     lua_marker("A", arena_marker)
     lua_marker("J", portal_desc {entry_way = 1})
@@ -1150,7 +1155,7 @@ KPROP: . = no_tele_into
 MAP
 xxxxxxxxxxxx
 x..........x
-x..p.......x
+x..p...{...x
 x..........x
 ...........x
 x..........x
@@ -1184,137 +1189,368 @@ ENDMAP
 
 NAME: Grassy_Area_2
 TAGS: grassy_area_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup no_monster_gen
-KFEAT: re = x
-KFEAT: fdgi1234567890 = .
+KFEAT: r = x
 FTILE: .t = floor_grass
 RTILE: r = wall_orc
-RTILE: e = wall_brick_yellow
-FTILE: f = village_tile_1
-KFEAT: abc = shopkeeper
-KFEAT: myzP = furniture
-TILE: a = SHOPKEEPER_3
-TILE: b = SHOPKEEPER_2
-TILE: c = SHOPKEEPER_1
-FTILE: myz = floor_grass
-FTILE: abc = floor_pebble_brown
-TILE: P = ALCHEMY_TABLE
-FTILE: P = village_tile_1
-FTILE: d = floor_dirt
-FTILE: g = floor_pebble_lightgray
+KFEAT: fghjklmopqsDEF = furniture
+KFEAT: AI = civilian
+KFEAT: niuvGH = .
+FTILE: n = floor_dirt
 FTILE: i = floor_vines
-KFEAT: ABCDEFGHIJKLMNOQRXYZ = furniture
-TILE: A = chair_1
-TILE: B = chair_2
-TILE: C = chair_3
-TILE: D = chair_4
-TILE: E = bookshelf_1
-TILE: F = bookshelf_2
-TILE: G = bookshelf_3
-TILE: H = bookshelf_4
-TILE: I = table_cards
-TILE: J = table_pizza
-FTILE: 1 = shelf_floor_3
-FTILE: 2 = shelf_floor_5
-FTILE: 3 = shelf_floor_6
-FTILE: 4 = shelf_floor_4
-TILE: K = bucket_1
-TILE: L = shelf_6
-TILE: M = shelf_apple
-FTILE: ABCDIJKLM = village_tile_1
-KFEAT: h = m
-TILE: h = wall_pebble_darkgray
-TILE: N = shelf_18
-TILE: O = table_cake
-FTILE: NOabc = village_tile_1
-FTILE: GH = village_tile_1
-FTILE: EF = wall_brick_yellow
-TILE: Q = male_blacksmith
-TILE: R = table_food
-KFEAT: SU = shopkeeper
-KFEAT: VW = civilian
-TILE: S = male_innkeeper
-TILE: U = female_innkeeper
-FTILE: U = shelf_floor_3
-TILE: V = some_dude
-TILE: W = arena_guard
-FTILE: W = floor_grass
-FTILE: SV = village_tile_1
-KFEAT: jkmnopqsuvyz = furniture
-TILE: Z = shelf_12
-TILE: j = shelf_15
-TILE: k = shelf_16
-FTILE: 5 = shelf_floor_8
-FTILE: 6 = shelf_floor_1
-TILE: m = shelf_weapon_1
-TILE: n = shelf_weapon_2
-TILE: o = shelf_helmet
-TILE: p = shelf_potion
-TILE: q = shelf_book
-TILE: s = shelf_armour
-TILE: u = shelf_13
-TILE: v = shelf_7
-FTILE: mnvoqsQ = floor_pebble_lightgray
-FTILE: jkpquZ = village_tile_1
-TILE: y = shelf_scroll
-FTILE: y = wall_brick_yellow
-FTILE: 7 = scroll_floor_1
-FTILE: 8 = scroll_floor_2
-FTILE: 9 = scroll_floor_3
-FTILE: 0 = scroll_floor_4
-KFEAT: < = G
-TILE: < = shelf_jewelry
-FTILE: < = wall_brick_yellow
-KFEAT: ()>-?'! = G
-TILE: ( = fruit_empty_1
-TILE: ) = fruit_green_1
-TILE: > = fruit_brown_1
-TILE: - = fruit_red_2
-TILE: ? = fruit_bottom
-TILE: ' = fruit_green_2
-TILE: ! = fruit_red_1
-FTILE: ?/ = floor_vines
-FTILE: )>-'! = floor_grass
-KFEAT: * = G
-TILE: * = fruit_bottom
-FTILE: * = floor_grass
-KFEAT: #$z%^ = G
-TILE: # = shelf_wand
-FTILE: # = village_tile_1
-TILE: $ = barrel_1
-TILE: z = barrel_2
-TILE: % = bucket_2
-FTILE: $z% = floor_grass
-TILE: ^ = shelf_key
-FTILE: ^ = village_tile_1
-FTILE: R = village_tile_1
+TILE: A = arena_guard
+TILE: f = barrel_1
+TILE: g = barrel_2
+TILE: j = fruit_green_1
+TILE: k = fruit_brown_1
+TILE: l = fruit_red_2
+TILE: m = fruit_green_2
+TILE: s = fruit_red_1
+TILE: o = fruit_bottom
+TILE: p = fruit_bottom
+TILE: q = bucket_2
+FTILE: o = floor_vines
+FTILE: fgjklmpqs = floor_grass
+FTILE: A = floor_grass
+FTILE: u = cobblestone_path
 FTILE: T = floor_vines
+FTILE: v = graveyard_grass
+TILE: D = graveyard_grass_log_middle
+TILE: E = graveyard_grass_log_edge_right
+TILE: F = graveyard_grass_log_edge_left
+FTILE: G = floor_sand
+FTILE: H = ship_tile_62
+TILE: I = hero_f
+FTILE: I = floor_vines
+SUBVAULT: a : arena_shop_1
+SUBVAULT: b : arena_shop_2
+SUBVAULT: c : arena_shop_3
+SUBVAULT: d : arena_shop_4
+SUBVAULT: e : arena_inn
+SUBVAULT: C : arena_shop_5
+KITEM: B = gold q:5000
 
 MAP
-ttttttttttttttttttt.ttttt..ttttt
-t..............................r
-t.......................Wdd....r
-t....eeeeee<e.ggmnggggg..dd.....
-t....efafZf1e.ogvvghhhg..ddddd..
-t....epL^uffe.vggQghlhg..d......
-t....e1116fke.sgggghhhg..d.....r
-t....efffffje.vgggggggg..d.....r
-t....ePffff5e.......dddddd.....r
-t....eeee+eee.t)>-.dd...eeeeye.r
-tt.ttt.........???ii'!..e7771e.r
-tdddddddddddddiiiiii?*..e789fe.r
-ttt..t........iiiTiii...+ffffe.t
-t...eeee+eeee.iiiiiii...e0fcfe.t
-t...efAVfffAe..iiiii....eeeeee.t
-t...eBICfffJe$$...t..xx........t
-t...efDffffDezz...ee+eEFe......t
-t...eRCfffSfe$....efffGHe......t
-t...effffffOezt...effffZe......t
-t...eKffffffe%....efbq#ue......t
-t...eLMNLLLLe.....eff116e......t
-t...e233U114e.....eeeeeee......t
-t...eeeeeeeee..................t
-t..............................t
+ttwwwwtttttttttttttuttttt..ttttt
+tvGwwWWvFDDEvvvvvvvuvv.........r
+tvGwwWvvvvvvvvvvvvvvv...Ann....r
+tvGwvaaaaaaaavbbbbbbbbb..nn.....
+t.Gwvaaaaaaaavbbbbbbbbb..nnnnn..
+t.Gwvaaaaaaaavbbbbbbbbb..n......
+tGww.aaaaaaaa.bbbbbbbbb..n.....r
+twww.aaaaaaaa.bbbbbbbbbnnn.B...r
+twww.aaaaaaaa.......nnnndddddd.r
+twwwwaaaaaaaa.tjkl.nn...dddddd.r
+ttwwWt.t.......oooiims..dddddd.r
+tnHHHnnnnnnnnniiiiiiop..dddddd.r
+ttwwW......t..iiiTiii...dddddd.t
+t.wWeeeeeeeee.iIiiiii...dddddd.t
+t.wWeeeeeeeee..iiiiinnn........t
+twwWeeeeeeeeeff.......nnn.tt...t
+twW.eeeeeeeeegg.ccccccc.nCCCCCCt
+twW.eeeeeeeeef..ccccccc.nCCCCCCt
+tWW.eeeeeeeeegt.ccccccc.nCCCCCCt
+t...eeeeeeeeeq..ccccccc.nCCCCCCt
+t...eeeeeeeee...ccccccctnCCCCCCt
+t...eeeeeeeee...ccccccc.nCCCCCCt
+t...eeeeeeeee...tt...t..nCCCCCCt
+t...................t...tCCCCCCt
 tttttttttttttttttttttttttttttttt
+ENDMAP
+
+NAME: Arena_Shop_1
+TAGS: arena_shop_1 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = village_tile_1
+RTILE: x = wall_brick_yellow
+KFEAT: bdefgijklm = furniture
+KFEAT: A = shopkeeper
+KFEAT: ach = .
+TILE: A = shopkeeper_3
+FTILE: a = shelf_floor_3
+TILE: b = shelf_key
+FTILE: c = shelf_floor_1
+TILE: d = shelf_potion
+TILE: e = shelf_6
+TILE: f = shelf_13
+TILE: g = shelf_12
+FTILE: h = shelf_floor_8
+TILE: j = shelf_16
+TILE: k = shelf_15
+TILE: l = shelf_jewelry
+TILE: m = alchemy_table
+FTILE: bdefgijkm = village_tile_1
+FTILE: A = village_tile_1
+FTILE: l = wall_brick_yellow
+KFEAT: B = distillery shop name:Jessica type:Potion suffix:Shop use_all count:18 greed:20 ; \
+           potion of haste q:3 | potion of haste q:4 | potion of haste q:5 |\
+           potion of agility q:6 | potion of might q:6 | potion of brilliance q:6 |\
+           potion of mutation | potion of mutation q:2 | potion of mutation q:3 |\
+           potion of resistance q:6 | potion of resistance q:6 | potion of magic q:6 |\
+           potion of magic q:6 | potion of berserk rage q:5 | potion of berserk rage q:5
+TILE: B = shop_panel_potions
+KFEAT: C = antiques shop name:Jessica type:Antique-Jewelry suffix:Collection use_all count:8 greed:20 ; \
+           any jewellery randart | any jewellery randart | any jewellery randart | any jewellery randart |\
+           any jewellery randart | any jewellery randart | any jewellery randart | any jewellery randart
+TILE: C = shop_panel_jewelry
+KFEAT: D = distillery shop name:Jessica type:Healing suffix:Potions count:17 use_all greed:7 ; \
+           potion of heal wounds q:3 | potion of heal wounds q:3 | potion of heal wounds q:3 |\
+           potion of heal wounds q:3 | potion of heal wounds q:3 | potion of heal wounds q:3 |\
+           potion of heal wounds q:3 | potion of heal wounds q:3 | potion of heal wounds q:3 |\
+           potion of heal wounds q:3 | potion of heal wounds q:3 | potion of heal wounds q:3 |\
+           potion of curing q:4 | potion of curing q:4 | potion of curing q:4 |\
+           potion of curing q:4 | potion of curing q:4
+TILE: D = shop_panel_potions
+
+MAP
+xxxxxxlx
+x.A.g.ax
+xdebf.Cx
+xaaac.jx
+xD...Bkx
+xm....hx
+xxxx+xxx
+ENDMAP
+
+NAME: Arena_Shop_2
+TAGS: arena_shop_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup no_monster_gen
+FTILE: . = floor_pebble_lightgray
+KFEAT: abcde = furniture
+KFEAT: g = m
+KFEAT: A = shopkeeper
+TILE: g = wall_pebble_darkgray
+TILE: a = shelf_7
+TILE: b = shelf_armour
+TILE: c = shelf_helmet
+TILE: d = shelf_weapon_1
+TILE: e = shelf_weapon_2
+TILE: A = male_blacksmith
+FTILE: abcde = floor_pebble_lightgray
+FTILE: A = floor_pebble_lightgray
+KFEAT: B = weapon shop name:Bendrick type:Sufficient suffix:Weapons use_all count:17 greed:30 ; \
+           mundane not_cursed quick blade | mundane not_cursed great sword |\
+           mundane not_cursed demon blade | mundane not_cursed triple sword |\
+           mundane not_cursed broad axe | mundane not_cursed executioner's axe |\
+           mundane not_cursed demon whip | mundane not_cursed great mace |\
+           mundane not_cursed giant spiked club | mundane not_cursed demon trident |\
+           mundane not_cursed bardiche | mundane not_cursed lajatang
+TILE: B = shop_panel_weapons
+KFEAT: C = armour shop name:Bendrick type:Decent suffix:Armour use_all count:17 greed:12 ; \
+           mundane not_cursed storm dragon scales | mundane not_cursed fire dragon scales |\
+           mundane not_cursed shadow dragon scales | mundane not_cursed quicksilver dragon scales |\
+           mundane not_cursed ice dragon scales | mundane not_cursed gold dragon scales |\
+           mundane not_cursed steam dragon scales | mundane not_cursed swamp dragon scales |\
+           mundane not_cursed pearl dragon scales | mundane not_cursed acid dragon scales |\
+           mundane not_cursed troll leather armour | mundane not_cursed crystal plate armour |\
+           mundane not_cursed plate armour | mundane not_cursed naga barding |\
+           mundane not_cursed centaur barding | mundane not_cursed cloak |\
+           mundane not_cursed buckler | mundane not_cursed pair of gloves |\
+           mundane not_cursed helmet
+TILE: C = shop_panel_armour
+KFEAT: D = antique armour shop name:Bendrick type:Advanced suffix:Armour use_all count:17 greed:35 ; \
+           pair of gloves randart | pair of gloves randart | pair of boots randart |\
+           pair of boots randart | helmet randart | hat randart | buckler randart |\
+           shield randart | cloak randart | cloak randart | robe randart | animal skin randart |\
+           large shield randart | robe randart | buckler randart | leather armour randart
+TILE: D = shop_panel_armour
+KFEAT: E = antique weapon shop name:Bendrick type:Unique suffix:Weapons use_all count:8 greed:80 ; \
+           long sword randart ego:flaming | long sword randart | great sword randart | war axe randart |\
+           great mace randart | dagger randart | battleaxe randart | spear randart ego:freezing
+TILE: E = shop_panel_weapons
+
+MAP
+..de.....
+c.aa.ggg.
+aEBA.glg.
+bD...ggg.
+aC.......
+ENDMAP
+
+NAME: Arena_Shop_3
+TAGS: arena_shop_3 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = village_tile_1
+RTILE: x = wall_brick_yellow
+KFEAT: cdefghij = furniture
+KFEAT: A = shopkeeper
+KFEAT: ab = .
+FTILE: a = shelf_floor_3
+FTILE: b = shelf_floor_1
+TILE: A = shopkeeper_2
+TILE: c = shelf_13
+TILE: d = shelf_12
+TILE: e = bookshelf_1
+TILE: f = bookshelf_2
+TILE: g = bookshelf_3
+TILE: h = bookshelf_4
+TILE: i = shelf_wand
+TILE: j = shelf_book
+FTILE: cdghij = village_tile_1
+FTILE: A = village_tile_1
+FTILE: ef = wall_brick_yellow
+KFEAT: B = book shop name:Gandolf type:Spell suffix:Repository use_all count:18 greed:20 ; \
+           book of summonings | book of spatial translocations | book of enchantments |\
+           book of death | book of the sky | book of the warp |\
+           book of the earth | book of burglary | book of annihilations |\
+           grand grimoire | necronomicon
+TILE: B = shop_panel_books
+KFEAT: C = weapon shop name:Gandolf type:Must-have suffix:Staves use_all count:9 greed:30 ; \
+           staff of summoning | staff of wizardry |\
+           staff of fire | staff of air | staff of earth | staff of cold |\
+           staff of poison | staff of death | staff of conjuration
+TILE: C = shop_panel_staves
+
+MAP
+xx+xefx
+x...ghx
+x..BCdx
+x.Ajicx
+x..aabx
+xxxxxxx
+ENDMAP
+
+NAME: Arena_Shop_4
+TAGS: arena_shop_4 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = village_tile_1
+RTILE: x = wall_brick_yellow
+KFEAT: b = furniture
+KFEAT: aefgh = .
+KFEAT: A = shopkeeper
+TILE: A = shopkeeper_1
+FTILE: e = scroll_floor_1
+FTILE: f = scroll_floor_2
+FTILE: g = scroll_floor_3
+FTILE: h = scroll_floor_4
+FTILE: a = shelf_floor_3
+TILE: b = shelf_scroll
+FTILE: b = wall_brick_yellow
+FTILE: A = village_tile_1
+KFEAT: B = scroll shop name:Jeremy type:Identification suffix:Station count:17 greed:25 ; scroll of identify q:3
+TILE: B = shop_panel_scrolls
+KFEAT: C = scroll shop name:Jeremy type:Scrolls suffix:Prestige greed:10 use_all count:14 ; \
+           scroll of blinking q:3 | scroll of blinking q:4 | scroll of blinking q:5 |\
+           scroll of fog q:3 | scroll of fog q:4 | scroll of fog q:5 |\
+           scroll of silence q:3 | scroll of brand weapon | scroll of vulnerability q:3 |\
+           scroll of amnesia q:5 | scroll of remove curse q:15 | scroll of enchant weapon q:8 |\
+           scroll of enchant armour q:4 | scroll of enchant armour q:4
+TILE: C = shop_panel_scrolls
+
+MAP
+xxxxbx
+xeeeax
+xefgCx
++....x
+xhBA.x
+xxxxxx
+ENDMAP
+
+NAME: Arena_Inn
+TAGS: arena_inn no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = village_tile_1
+RTILE: x = wall_brick_yellow
+KFEAT: afghijklmnop = furniture
+KFEAT: AB = shopkeeper
+KFEAT: C = civilian
+KFEAT: bcde = .
+TILE: a = shelf_6
+FTILE: b = shelf_floor_3
+FTILE: c = shelf_floor_4
+FTILE: d = shelf_floor_5
+FTILE: e = shelf_floor_6
+TILE: A = female_innkeeper
+TILE: B = male_innkeeper
+TILE: C = some_dude
+TILE: f = shelf_18
+TILE: g = shelf_apple
+TILE: h = table_cake
+TILE: i = chair_1
+TILE: j = chair_2
+TILE: k = chair_3
+TILE: l = chair_4
+TILE: m = table_cards
+TILE: n = table_pizza
+TILE: o = table_food
+TILE: p = bucket_1
+FTILE: afghijklnmop = village_tile_1
+FTILE: BC = village_tile_1
+FTILE: A = shelf_floor_3
+KFEAT: D = general shop name:Randolf-the-Trader type:Smuggled suffix:Valuables use_all count:13 greed:30 ; \
+           quad damage | quad damage | quad damage |\
+           potion of heal wounds q:5 | potion of heal wounds q:5 |\
+           potion of haste q:5 | potion of haste q:5 |\
+           crystal ball of energy | storm bow |\
+           ring of the mage | Kryia's mail coat | hat of pondering | autumn katana
+TILE: D = shop_panel_misc
+KFEAT: E = general shop name:Randolf-the-Trader type:General suffix:Goods use_all count:14 greed:15 ; \
+           potion of blood q:5 | potion of blood q:5 | potion of blood q:5 |\
+           potion of blood q:5 | ring of poison resistance | ring of protection from fire |\
+           ring of protection from cold | ring of protection from magic | amulet of regeneration |\
+           amulet of the gourmand | amulet of harm | amulet of reflection | ring of see invisible
+TILE: E = shop_panel_misc
+KFEAT: F = food shop count:17 name:Gertrude type:Delicious suffix:Food greed:4 ; ration q:2
+TILE: F = shop_panel_food
+
+MAP
+xxxx+xxxx
+x.iC...ix
+xjmk...nx
+x.l....lx
+xok..EB.x
+x.....Dhx
+xp..F...x
+xagfaaaax
+xdeeAbbcx
+xxxxxxxxx
+ENDMAP
+
+NAME: Arena_Shop_5
+TAGS: arena_shop_5 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+FTILE: . = cottage_floor
+RTILE: x = cottage_wall
+KFEAT: hnop = .
+KFEAT: abcdefgijklm = furniture
+KFEAT: A = shopkeeper
+TILE: a = cottage_wall_window
+TILE: b = cottage_wall_window_2
+TILE: c = shelf_bow
+TILE: d = shelf_side_bow
+TILE: e = shelf_side_tomahawks
+TILE: f = shelf_side_crossbow
+TILE: g = shelf_side_arrows
+FTILE: h = shelf_floor_3_cottage
+FTILE: n = shelf_floor_8_cottage
+FTILE: o = shelf_floor_1_cottage
+TILE: i = shelf_6
+FTILE: p = shelf_floor_4_cottage
+FTILE: ab = floor_grass
+FTILE: cdefgi = cottage_floor
+TILE: A = elf_male_bowsman
+FTILE: A = cottage_floor
+KFEAT: B = weapon shop name:Elfearian type:Archery suffix:Shack-of-Wonders use_all count:24 greed:20 ; \
+           mundane not_cursed shortbow | mundane not_cursed longbow |\
+           mundane not_cursed hand crossbow | mundane not_cursed arbalest |\
+           tomahawk q:20 | tomahawk q:20 | tomahawk q:20 | tomahawk q:20 |\
+           arrow q:20 | arrow q:20 | arrow q:20 | arrow q:20 | arrow q:20 |\
+           tomahawk q:20 ego:exploding | tomahawk q:20 ego:poisoned | bolt q:20 |\
+           bolt q:20 | bolt q:20 | bolt q:20 | bolt q:20 | bolt q:20 ego:steel |\
+           bolt q:20 ego:steel
+TILE: B = shop_panel_archery
+KFEAT: C = armour shop name:Elfearian type:Slick suffix:Garbs use_all count:10 greed:50 ; \
+           not_cursed leather armour level:3 ego:magic_resistance tile:hunters_armour_1 wtile:hunters_coat_with_pants |\
+           not_cursed pair of boots ego:running wtile:hunters_boots |\ 
+           not_cursed pair of gloves ego:archery wtile:hunters_gloves |\
+           not_cursed hat ego:cold_resistance tile:cowl_1 wtile:hunters_cowl |\
+           not_cursed cloak ego:poison_resistance wtile:green |\
+           not_cursed cloak ego:invisibility wtile:magenta |\
+           not_cursed longbow ego:freezing
+TILE: C = shop_panel_archery
+
+MAP
+xaxxbx
+x.A..x
+xiicix
+xhhhpx
+xe.Cfx
+xo.Bdx
++...nx
+xxxxxx
 ENDMAP
 
 NAME: Rocky_Path_2
@@ -1390,7 +1626,7 @@ MARKER: V = lua:tutorial6.msg("potions_1")
 MARKER: X = lua:tutorial6.msg("potions_2")
 {{
 local raise_bridge_marker = TriggerableFunction:new {
-    func = "raise_bridge",
+    func = "hero_mode_raise_bridge",
     repeated = true,
     data = {
         goblins_killed = 0
@@ -1596,7 +1832,7 @@ KITEM: # = pair of boots mundane not_cursed useful
 FTILE: # = SHIP_TILE_62
 {{
 local rat_death_marker = TriggerableFunction:new {
-    func = "rat_death",
+    func = "hero_mode_rat_death",
     repeated = true,
     data = {
         num_killed = 0
@@ -1604,16 +1840,16 @@ local rat_death_marker = TriggerableFunction:new {
 }
 
 local sword_move_marker = TriggerableFunction:new {
-    func = "sword_move",
+    func = "hero_mode_sword_move",
     repeated = true
 }
 
 local armour_pickup_marker = TriggerableFunction:new {
-    func = "armour_pickup"
+    func = "hero_mode_armour_pickup"
 }
 
 local boots_pickup_marker = TriggerableFunction:new {
-    func = "boots_pickup"
+    func = "hero_mode_boots_pickup"
 }
 
 rat_death_marker:add_triggerer(DgnTriggerer:new {
@@ -1694,7 +1930,7 @@ r..rrrrwwwwwwwwwwwww....wwwwwwwW10001Xwwd
 rrr....aaaaawwwww..bubbb.11$11111MRO1Xwwd
 r..[.bbbsssswwwwww.&bbbb.wwwwwwW<M1O1Xwwd
 r..b&bubbsss1???1].b&%b..wwwwwwN1S2V1Pwwd
-r&..bbb&ssssaawww.b&bub.wwwwwwwM{Q2U1Owwd
+r&..bbb&ssssaawww.b&bub.wwwwwwwM1Q2U1Owwd
 r.bbbubsssaaawwwww.....wwwwwwwwJ11111Kwwd
 rsss*sssaaawwwwwwwww..wwwwwwwwwHLLLLLIwwd
 daaaaaaaawwwwwwwwwwwwwwwwwwwwwwCAAAAABwwd
@@ -1750,7 +1986,7 @@ MARKER: H = lua:tutorial6.msg("waiting")
 MARKER: I = lua:tutorial6.msg("tactics")
 {{
 local melt_ice_marker = TriggerableFunction:new {
-    func = "melt_ice",
+    func = "hero_mode_melt_ice",
     repeated = true,
     data = {
         goblins_killed = 0
@@ -1787,26 +2023,73 @@ ENDMAP
 
 NAME: Graveyard_2
 TAGS: graveyard_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
-KFEAT: abcdefghijkl = .
-KFEAT: mnopqsuvyz = x
-KFEAT: r = furniture
+KFEAT: abcdefghijklqsuvyzHIJKLMNOPQRSTUVWXYZ = .
+KFEAT: mnopy = x
+KFEAT: rBC = furniture
+KFEAT: EF = G
+KFEAT: A = civilian
+KFEAT: D = ominous_space
 FTILE: . = graveyard_grass
 FTILE: t = graveyard_grass
-RTILE: m = graveyard_gate_wall_bottom
-RTILE: n = graveyard_gate_sw
-RTILE: o = graveyard_gate_se
-RTILE: p = graveyard_gate_nw
-RTILE: q = graveyard_gate_ne
+RTILE: y = graveyard_gate_wall_bottom
+RTILE: R = graveyard_gate_sw
+RTILE: S = graveyard_gate_se
+RTILE: T = graveyard_gate_nw
+RTILE: U = graveyard_gate_ne
+FTILE: R = graveyard_gate_open_sw
+FTILE: S = graveyard_gate_open_se
+FTILE: T = graveyard_gate_open_nw
+FTILE: U = graveyard_gate_open_ne
 TILE: r = graveyard_gate_wall_top
 FTILE: r = cobblestone_path
 FTILE: a = cobblestone_path
+FTILE: b = spooky_grass_blue
+FTILE: c = spooky_grass_edge_east_blue
+FTILE: d = spooky_grass_edge_se_blue
+FTILE: e = graveyard_grass_edge_nw_blue
+FTILE: f = spooky_grass_flowers_blue
+FTILE: g = spooky_grass_flowers_2_blue
+FTILE: h = cottage_floor
+RTILE: m = cottage_wall
+RTILE: n = cottage_wall_cracked
+RTILE: o = cottage_wall_torch
+RTILE: p = cottage_wall_cracked_2
+TILE: B = worn_bed_bottom
+FTILE: B = cottage_floor
+FTILE: i = cottage_floor_worn_bed_top
+FTILE: j = cottage_floor_weeds_2_blue
+FTILE: k = cottage_floor_cracked
+FTILE: l = cottage_floor_cracked_2
+TILE: C = cottage_wall_window
+FTILE: C = cottage_floor
+TILE: D = spooky_grass_spawn_point_blue
+FTILE: q = spooky_grass_energy_blue
+FTILE: s = spooky_grass_energy_2_blue
+FTILE: u = spooky_grass_energy_3_blue
+FTILE: v = spooky_grass_edge_south_blue
+TILE: E = dngn_gravestone
+TILE: F = dngn_gravestone_ornate
+FTILE: EF = graveyard_grass
+FTILE: H = cottage_floor_carpet_middle
+FTILE: I = cottage_floor_carpet_s
+FTILE: J = cottage_floor_carpet_sw
+FTILE: K = cottage_floor_carpet_se
+FTILE: L = cottage_floor_carpet_e
+FTILE: M = cottage_floor_carpet_w
+FTILE: O = cottage_floor_carpet_nw
+FTILE: P = cottage_floor_carpet_n
+FTILE: Q = cottage_floor_carpet_ne
+TILE: A = gravekeeper
+FTILE: A = cottage_floor
+FTILE: V = spooky_grass_whisps_blue
+FTILE: W = spooky_grass_whisps_2_blue
 
 MAP
-xxxxxxxxxxxxxxxxxxxxxt
-x.............trrpqrrt
-x.............tmmnommt
-x.............t..aa..t
-x.............t..aaa.t
-x.............tttttatt
-xxxxxxxxxxxxxxtttttatt
+mmmmommmfbbbc.EE...E.t
+miOPQklmVbubc....aa..t
+mBMHLAhmqDgbc.trrTUrrt
+mhJIKhhpbsbbc.tyyRSyyt
+mhkhhhjmWfed..tEEaaaEt
+mnCm+nCmbbcFE.tEE..aEt
+twwwhhhhvvd...tttttatt
 ENDMAP

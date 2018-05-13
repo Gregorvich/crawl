@@ -38,6 +38,7 @@
 #include "god-conduct.h"
 #include "god-passive.h"
 #include "god-wrath.h"
+#include "hero-mode.h"
 #include "hints.h"
 #include "hiscores.h"
 #include "invent.h"
@@ -1004,8 +1005,8 @@ int player_teleport(bool calc_unid)
 {
     ASSERT(!crawl_state.game_is_arena());
 
-    // Don't allow any form of teleportation in Sprint.
-    if (crawl_state.game_is_sprint())
+    // Don't allow any form of teleportation in Sprint or Hero Mode.
+    if (crawl_state.game_is_sprint() || crawl_state.game_is_hero_mode())
         return 0;
 
     // Short-circuit rings of teleport to prevent spam.
@@ -2614,7 +2615,7 @@ void gain_exp(unsigned int exp_gained, unsigned int* actual_gain)
     if (crawl_state.game_is_arena())
         return;
 
-    // xp-gated effects that don't use sprint inflation
+    // xp-gated effects that don't use sprint or hero mode inflation
     _handle_xp_penance(exp_gained);
     _handle_god_wrath(exp_gained);
     _transfer_knowledge(exp_gained);
@@ -2627,7 +2628,11 @@ void gain_exp(unsigned int exp_gained, unsigned int* actual_gain)
     if (crawl_state.game_is_sprint())
         skill_xp = sprint_modify_exp(skill_xp);
 
-    // xp-gated effects that use sprint inflation
+    // modified experience due to hero mode inflation
+    if (crawl_state.game_is_hero_mode())
+        skill_xp = hero_mode_modify_exp(skill_xp);
+
+    // xp-gated effects that use sprint and hero mode inflation
     _handle_stat_loss(skill_xp);
     _handle_temp_mutation(skill_xp);
     _recharge_xp_evokers(skill_xp);
@@ -6323,6 +6328,9 @@ string player::no_tele_reason(bool calc_unid, bool blinking) const
 {
     if (crawl_state.game_is_sprint() && !blinking)
         return "Long-range teleportation is disallowed in Dungeon Sprint.";
+
+    if (crawl_state.game_is_hero_mode() && !blinking)
+        return "Long-range teleportation is disallowed in Hero Mode.";
 
     if (stasis())
         return "Your stasis prevents you from teleporting.";

@@ -1956,7 +1956,7 @@ static bool _cmp_map_by_order(const map_def* m1, const map_def* m2)
            || m1->order == m2->order && m1->desc_or_name() < m2->desc_or_name();
 }
 
-static void prompt_character_selection(newgame_def& ng, newgame_def& ng_choice,
+/*static void prompt_character_selection(newgame_def& ng, newgame_def& ng_choice,
                                 const newgame_def& defaults,
                                 mapref_vector maps)
 {
@@ -1967,9 +1967,9 @@ static void prompt_character_selection(newgame_def& ng, newgame_def& ng_choice,
                     get_number_of_lines()), "freeform");
 
     freeform->allow_focus(false);
-    menu.attach_object(freeform);
-    menu.set_active_object(freeform);
-}
+    Menuscroller* characters = new Menuscroller();
+
+}*/
 
 static void _prompt_gamemode_map(newgame_def& ng, newgame_def& ng_choice,
                                  const newgame_def& defaults,

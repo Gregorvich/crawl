@@ -34,7 +34,7 @@ end
 
 # Maps
 
-NAME: grassy_plain
+NAME: Grassy_Plain_2
 TAGS: hero_mode no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 DESC: A Grassy Plain
 ORDER: 10
@@ -55,8 +55,8 @@ FTILE: d = floor_grass
 FTILE: e = floor_grass
 FTILE: P = floor_grass
 FTILE: | = floor_grass
-SUBVAULT: H : house
-SUBVAULT: b : bazaar
+SUBVAULT: H : house_2
+SUBVAULT: b : bazaar_2
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xttttttttttttttttttttttttttttttttttttttttttttttttttttttttx
@@ -97,8 +97,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ENDMAP
 
-NAME: house_1
-TAGS: house no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+NAME: House_2
+TAGS: house_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 KMONS: O = kobold name:Durwent_the_Legendary_Kobold name_replace
 KITEM: Z = Orb of Zot
 FTILE: . = floor_pebble_blue
@@ -115,8 +115,8 @@ x......%x
 xxxxxxxxx
 ENDMAP
 
-NAME: bazaar_circle
-TAGS: bazaar no_rotate no_hmirror no_vmirror no_monster_gen
+NAME: Bazaar_Circle_2
+TAGS: bazaar_2 no_rotate no_hmirror no_vmirror no_monster_gen
 SHUFFLE: ABCD, EFGH
 SUBST: H=W, A=T, B=T
 KFEAT: CDEFG = any shop

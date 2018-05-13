@@ -591,6 +591,14 @@ shelf_floor_5 SHELF_FLOOR_5
 shelf_floor_6 SHELF_FLOOR_6
 shelf_floor_7 SHELF_FLOOR_7
 shelf_floor_8 SHELF_FLOOR_8
+shelf_floor_1_cottage SHELF_FLOOR_1_COTTAGE
+shelf_floor_2_cottage SHELF_FLOOR_2_COTTAGE
+shelf_floor_3_cottage SHELF_FLOOR_3_COTTAGE
+shelf_floor_4_cottage SHELF_FLOOR_4_COTTAGE
+shelf_floor_5_cottage SHELF_FLOOR_5_COTTAGE
+shelf_floor_6_cottage SHELF_FLOOR_6_COTTAGE
+shelf_floor_7_cottage SHELF_FLOOR_7_COTTAGE
+shelf_floor_8_cottage SHELF_FLOOR_8_COTTAGE
 village_tile_1 VILLAGE_TILE_1
 scroll_floor_1 SCROLL_FLOOR_1
 scroll_floor_2 SCROLL_FLOOR_2
@@ -613,6 +621,7 @@ graveyard_gate_open_sw GRAVEYARD_GATE_OPEN_SW
 # Tiles for cottage in graveyard
 %sdir dngn/floor/cottage
 cottage_floor COTTAGE_FLOOR
+cottage_floor_carpet_middle COTTAGE_FLOOR_CARPET_MIDDLE
 cottage_floor_carpet_e COTTAGE_FLOOR_CARPET_E
 cottage_floor_carpet_ne COTTAGE_FLOOR_CARPET_NE
 cottage_floor_carpet_n COTTAGE_FLOOR_CARPET_N

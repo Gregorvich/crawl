@@ -1176,12 +1176,12 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
         {
             coord_def spawn_point_pos;
             bool spawn_point_found = false;
-            const int r = 0;
-            for (radius_iterator ri(you.pos(), r, C_SQUARE, LOS_DEFAULT); ri; ++ri)
+            const int r = 100;
+            for (distance_iterator di(you.pos(), false, false, r); di; ++di)
             {
-                dungeon_feature_type feature = grd(*ri);
+                dungeon_feature_type feature = grd(*di);
                 if (feat_is_spawn_point(feature)) {
-                    spawn_point_pos = *ri;
+                    spawn_point_pos = *di;
                     spawn_point_found = true;
                     break;
                 }
