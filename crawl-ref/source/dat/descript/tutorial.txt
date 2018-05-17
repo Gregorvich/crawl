@@ -761,7 +761,7 @@ arena and spill some blood. Good luck!
 tutorial6 movement
 
 Use the <input>Arrow Keys</input> to move around. You can also move by clicking somewhere
-with your <input>Mouse</input>. Step onto the blue pad to continue the tutorial.
+with your <input>Mouse</input>. Follow the blue pads to continue the tutorial.
 %%%%
 tutorial6 viewing_messages
 
@@ -792,8 +792,10 @@ Notice how you can move through shallow water but not deep water.
 %%%%
 tutorial6 weapons
 
-You are currently unarmed and are in no state to defend yourself. Go
-retrieve your weapons and armour.
+Stepping on one of the blue squares will result in a helpful message popping up,
+like this one. If you ever feel lost, just keep an eye out for one of these. Now,
+you are currently unarmed and are in no state to defend yourself. Go retrieve
+your weapons and armour.
 %%%%
 tutorial6 picking_up_items
 
@@ -831,18 +833,22 @@ health and magic points as long as there are no enemies around. Press
 %%%%
 tutorial6 food
 
-Before continuing, this is a good opportunity to discuss food. Simply put,
-you will get hungry as you perform certain actions, so it is a good idea
-to stock up on food. You can butcher corpses by standing over them and
-pressing <input>$cmd[CMD_BUTCHER]</input>. Try doing this on the rat you have just killed.
+Before continuing, this is a good opportunity to discuss food. As you perform
+actions such as moving and attacking, you will get more hungry. If you don't
+keep your nutrition up, you will eventually starve to death and die. So, it is
+a good idea to stock up on food, and one way to do this is to butcher monster
+corpses. You can butcher corpses by standing over them and pressing
+<input>$cmd[CMD_BUTCHER]</input>. Try doing this on the rats you have just
+killed.
 %%%%
 tutorial6 options
 
 Continuing north will lead to an area where you can learn the more
 advanced mechanics of Dungeon Crawl Stone Soup. If you would rather skip
 the rest of the tutorial, then you can head to The Arena (west) or pick
-a religion in the cathedral (north east). It is strongly recommended to 
-play through the rest of the tutorial if this is your first playthrough.
+a religion in the cathedral (north east). (For the sake of the study, go
+through the tutorial). It is strongly recommended to play through the rest
+of the tutorial if this is your first playthrough.
 %%%%
 tutorial6 adventuring_2
 
@@ -903,9 +909,8 @@ tutorial6 ranged_combat_2
 
 To fire ammunition at an enemy, press <input>$cmd[CMD_FIRE]</input>. This
 will automatically select an enemy for you. You can then switch between
-enemies by pressing <input>$cmd[CMD_TARGET_CYCLE_FORWARD]</input>.
-Alternatively, you can click on the item in your inventory and manually
-select an enemy to fire at.
+enemies by using the arrow keys. Alternatively, you can click on the item
+in your inventory and manually select an enemy to fire at.
 %%%%
 tutorial6 ranged_combat_3
 
@@ -967,11 +972,8 @@ tutorial6 potions_1
 Potions are vital to survival, as they provide ever important healing
 benefits and other useful enchantments. They can also, however, have
 undesirable effects. Press <input>$cmd[CMD_QUAFF]</input> to quaff
-(drink) a potion, or alternatively click on it in your inventory.
-%%%%
-tutorial6 potions_2
-
-These healing potions will probably be useful for the rest of the
+(drink) a potion, or alternatively click on it in your inventory. These 
+healing potions will probably be useful for the rest of the
 tutorial.
 %%%%
 tutorial6 picking_up_many_items
@@ -987,12 +989,16 @@ tutorial6 artifacts
 Items with unique names are artifacts. Artifacts can have a number of unique
 properties, and some will give you new abilities. Press
 <input>$cmd[CMD_USE_ABILITY]</input> to look at your abilities or to use 
-one of them. Abilities will also appear above the inventory menu.
+one of them. You can also access your abilities by clicking on the abilities
+tab to the left of your inventory.
 %%%%
 tutorial6 wands
 
-Wands are used by evoking them <input>$cmd[CMD_EVOKE]</input>. Try to use
-this wand to defeat the difficult enemy ahead.
+Wands are used by evoking them <input>$cmd[CMD_EVOKE]</input>. They are
+reliable for attacking at long range and typically deal a large amount of
+damage, which can be increased by training invocations. There is another
+nasty kobold down the hallway around the next corner; use this wand to
+gain an edge against it.
 %%%%
 tutorial6 increasing_attributes
 
@@ -1006,26 +1012,24 @@ damage.</red> \n
 %%%%
 tutorial6 jewelry_1
 
-Jewelry can provide many different benefits, such as increasing your
-attributes or giving you resistance to certain elements. Pick up this
-ring and equip it
+Oh look, a shiny amulet. Why don't you go ahead and equip it?
 %%%%
 tutorial6 jewelry_2
 
-Oops! As it turns out that ring was <italics>cursed</italics>. Cursed
-equipment are detrimental to your stats, and cannot be removed once
-equipped. No need to worry though, scrolls of remove curse can be used
-to lift the curses from all equipment you are wearing.
+Oops! As it turns out that amulet was cursed. Cursed equipment is usually
+detrimental to your stats, and cannot be removed once equipped. No need to
+worry though, scrolls of remove curse can be used to lift the curses from
+all equipment you are wearing. You just need to go find one.
 %%%%
 tutorial6 jewelry_3
 
 Lifting the curse from cursed equipment does not remove the penalties the
 item gives you- it simply allows you to remove it. You might as well drop
-the ring you picked up earlier. Press <input>$cmd[CMD_DROP]</input> to drop
-items from your inventory, or <input>Shift Leftclick<\input> the item you
+the amulet once you've used the scroll. Press <input>$cmd[CMD_DROP]</input>
+to drop items from your inventory, or <input>Shift Leftclick</input> the item you
 want to drop.
 %%%%
-tutorial6 shops
+tutorial6 shops_1
 
 Shops offer a variety of items, from armour to scrolls to potions. You are
 not able to sell any items to them, however. To access a shop's inventory,
@@ -1041,12 +1045,12 @@ must get access to spellbooks. Picking up a spellbook automatically
 adds any spells in it to your list of spells. Pick up the spellbook on
 the ground.
 %%%%
-tutorial6 memorisation
+tutorial6 memorisation_1
 
 The next step to using a spell is to memorise it. Press
 <input>$cmd[CMD_MEMORISE_SPELL]</input> to access your list of spells 
 and memorise one of them. You can also click on the memorise tab to the 
-left of the inventory menu.
+left of the inventory menu. Try to memorise Flame tongue.
 %%%%
 tutorial6 memorisation_2
 
@@ -1060,7 +1064,11 @@ tutorial6 casting_spells
 
 Use your new found power to defeat the enemies. You can cast spells by
 pressing <input>$cmd[CMD_CAST_SPELL]</input>, or by clicking on the spell's tile above
-the inventory menu.
+the inventory menu. As you learn spells, they will be assigned to keys in
+alphebitically order, so you can cast your first spell with "z" and then
+"lowercase a", and your second spell with "z" and then "lowercase b", and so on.
+Pressing "z" followed by "enter" will cause you to cast the spell you used
+most recently.
 %%%%
 tutorial6 spell_menu
 
@@ -1071,15 +1079,19 @@ can also select which spell you would like to cast by pressing
 tutorial6 regaining_mana
 
 Remember that resting regenerates your mana as well as your health. If
-necessary, retreat and rest to regenerate your mana and to continue to cast
+necessary, retreat and rest to regenerate your mana to continue to cast
 your spells.
 %%%%
 tutorial6 miscasting_spells
 
-Miscasting spells can result in nasty consequences. The more difficult the
-spell, the more nasty these consequences will be. You can increase your
-chance of successfully casting a spell by increasing your magic related
-skills. It can also be improved with the help of some items.
+Now that you have literally warmed your hands when it comes to magic, lets
+take this moment to discuss some of the more technical aspects of magic. First
+off, miscasting spells. Miscasting spells can result in nasty consequences.
+The more difficult the spell, the more nasty these consequences will be. You
+can increase your chance of successfully casting a spell by increasing your
+magic related skills. It can also be improved with the help of some items.
+You can see your chance of miscasting spells by hovering your mouse over
+the appropriate spell, or by pressing <input>$cmd[CMD_DISPLAY_SPELLS]</input>.
 %%%%
 tutorial6 recasting_spells
 
@@ -1089,17 +1101,18 @@ You can quickly recast the last spell you used on a monster with
 tutorial6 staves
 
 Staves, despite being poor melee weapons, can be used to increase your
-proficiency with casing spells. Notice the improvement of your spell
-success chance after equipping the staff. Success chances can be looked
-at by hovering over the spell tile. Different equipment can increase
-or decrease your spell success chance. Shields and heavy armour will
-greatly decrease the chance of successfully casting a spell.
+proficiency with casting spells. Here is a staff for free to get you started.
+Notice the improvement of your spell success chance after equipping the staff.
+Staves can have other effects as well, such as increasing the damage of certain
+spells and increasing your AC (armour rating).
 %%%%
 tutorial6 spells_and_hunger
 
-Spellcasting greatly increases your hunger. The more difficult the spell,
-the greater it increases it. This can be reduced by increasing your
-intelligence stat and by training the spellcasting skill.
+Casting spells will make you very hungry. The more difficult the spell,
+the hungrier the spell will make you. This can be reduced by increasing your
+intelligence stat and by training the spellcasting skill. Fortunately,
+it seems like the kobolds were having a pizza party here, so you can take
+some of that with you.
 %%%%
 tutorial6 spell_slots
 
@@ -1114,15 +1127,17 @@ then west into the area with the pond.
 %%%%
 tutorial6 necromancy_2
 
-Ah look! A graveyard. A necromancer's paradise. Pick up the spellbook to
-learn the raise undead spell. There is also a scroll of amnesia here in
-case you do not have enough spell slots to learn the spell. Scrolls of
-amnesia can be used to forget a memorised spell and refund your spell_points.
+Ah look! A graveyard. A necromancer's paradise. Here, we are going to teach
+you about follower mechanics. Pick up the spellbook to learn the raise undead
+spell. There is also a scroll of amnesia here in case you do not have enough
+spell slots to learn the spell. Scrolls of amnesia can be used to forget a
+memorised spell and refund your spell points.
 %%%%
 tutorial6 necromancy_3
 
-Now, use your new spell to raise an undead army! Once you do that,
-proceed north to the next tutorial.
+Now, use your new spell to raise an undead army! You can do this by casting
+the spell on the corpses around you. Once you've done this, head to the cave
+to the north
 %%%%
 tutorial6 necromancy_4
 
@@ -1132,20 +1147,23 @@ forcing your ally take enemy attacks for you.
 %%%%
 tutorial6 necromancy_5
 
-You might want to wait for your allies to catch up with you before you
-enter this cave. Press <input>$cmd[CMD_WAIT]</input> to wait for a single
-turn.
+You might want to wait for your allies to catch up with you before proceeding.
+Press <input>$cmd[CMD_WAIT]</input> to wait for a single turn.
 %%%%
 tutorial6 necromancy_6
 
-Now, use your undead army to wreck havic on the inhabitants of this cave!
-Press <input>#cmd[CMD_SHOUT]</input> to command your allies to attack.
+There is a group of adventurers in the next room who, like you, aspire to
+fight in the arena to become the arena champion. Use your undead army and
+all that you have learned to kill them. Show them that there can be only
+one arena champion! You can use <input>$cmd[CMD_SHOUT]</input> to command
+your allies.
 %%%%
 tutorial6 necromancy_7
 
-Animate skeleton works on any corpse with a skeleton inside, and also
-gives you meat in the process. Be sure to rebuild your army before
-leaving.
+Who knows, maybe they were cultists or something? Anyway, Animate skeleton works
+on any corpse with a skeleton inside, and also gives you meat in the process.
+Unfortunately, uniques don't drop corpses, but there are a few skeletons here
+in case you need them. Proceed into the next room whenever you are ready.
 %%%%
 tutorial6 removing_equipment
 
@@ -1163,12 +1181,11 @@ tutorial6 conclusion
 
 Congratulations! You have completed the tutorial and are now ready to
 embark on adventures. As a reward, you are allowed to keep everything
-you have gained during the tutorial. Do keep in mind though that these
-items are relatively cheap, so don't feel you have to re-complete the
-tutorial if you meet an unfortunate end. One more thing, if you want
-to learn about gods and gain god abilities, enter the cathedral to
-the southeast. Look out for these blue tutorial panels if you have
-questions.
+you have gained during the tutorial. You should now head to the arena,
+which is south and then to the west of the cathedral area. One more thing,
+if you want to learn about gods and gain god abilities, you can go to the
+cathedral to the southeast. Look out for these blue tutorial panels if you
+have questions.
 %%%%
 tutorial6 death
 
@@ -1201,3 +1218,114 @@ tutorial6 boots
 
 Don't forget your boots!
 %%%%
+tutorial6 respawning
+
+This is a spawn point. When you die, you will appear at whichever of these you
+are closest to. Dying will result in enemies respawning, so be weary of that.
+Also, stepping on one of these will cause enemies to respawn as well.
+%%%%
+tutorial6 shops_2
+
+There is a shop up ahead. These are distinguishable by a yellow panel with
+an icon over it, which resembles what the theme of the shop is and what the
+owner typically sells. Since you don't have any gold, we will ignore the
+merchant for now. Proceed to the door.
+%%%%
+tutorial6 pressure_plates_1
+
+This here is what we call a 'pressure plate.' Stepping on it will cause a
+variety of good and interesting things to happen, so there is little reason
+not to step on one when you get the chance.
+%%%%
+tutorial6 magic_pointers_1
+
+Flame tongue has a short reach, but has a high chance of hitting an opponent.
+Throw flame has less accuracy, but allows you to attack enemies that are far away.
+If you are unable to learn one or both of these spells right now, training your
+spellcasting and leveling up will give you more spell points to spend on spells.
+%%%%
+tutorial6 magic_pointers_2
+
+Remember that at any point you can toggle which skills are receiving
+experience via the skill interface (accessible by the spell tile above the
+inventory area). You might want to toggle them such that spellcasting is being
+prioritized, since this allows you to memorise more spells among other benefits,
+such as reducing the chance of spells failing. Do this by clicking on
+spellcasting so that its percentage is sizable and adjust your other skills
+accordingly. Note that you can only train skills if you have means of training
+them. For example, you need a fire spell memorised to train fire magic.
+%%%%
+tutorial6 magic_pointers_3
+
+One more thing before we try magic out. Your success chance of casting a spell
+is affected by how heavy your equipment is (which is typically proportional to
+a piece of armour's AC rating). You might want to switch your armour out for
+the robes you started with. Removing equipment takes 5 turns, and equipping
+equipment takes another 5, so be sure to have your equipment figured out
+before entering battle.
+%%%%
+tutorial6 jewelry_4
+
+Here is a ring to help you out with training your spellcasting. It will
+increase your total reserves of mana, allowing you to cast more spells before
+running out of juice. Jewelry can have a variety of other useful properties,
+such as granting resistances to certain elements and increasing your stats. The
+menu for equipping jewelry can be accessed using
+<input>$cmd[CMD_WEAR_JEWELLERY]</input><localtiles>.
+%%%%
+tutorial6 resting_reminder
+
+Remember that you can regain your health after combat by resting with
+<input>$cmd[CMD_REST]</input>.
+%%%%
+tutorial6 strategy_1
+
+Through this door is a dangerous magic using kobold that will summon more
+powerful enemies to fight you. Magic users typically have high HD (Hit Dice),
+and are therefore resistant to magic and have high spellpower. They do, however,
+have low AC (armour class). So the best strategy here would be to rush the kobold
+down and kill it using melee attacks before it can do anything. Or, alterantively,
+you can use your ranged weapons to attack it from a distance.
+%%%%
+tutorial6 cursed_equipment
+
+A note on cursed equipment. Artifact items are often times cursed, and will
+still be functionable, but not all that desirable. So, if you see a shiny sword
+in a store and think that you a purchasing the best weapon in the game, you
+might be disappointed if it ends up being cursed. Buying equipment that does
+not specifically state it is 'not cursed' is therefore a gamble,
+so caution should be taken. Also, it is a good idea to use a "scroll of identity"
+on an unidentified item before carelessly equipping it.
+
+%%%%
+tutorial6 gold
+
+Lucky you, you just found a treasure trove! Gold is a valuable resource, since
+it allows you to acquire better weapons and armour, new spells, and many other
+things from shops. You will occasionally find gold scattered around like here,
+but your main method for making gold will be fighting in the arena. You can go
+back to the merchant we found earlier and purchase better equipment if you want.
+%%%%
+tutorial6 pressure_plates_2
+
+Here is a pressure plate. Typically, stepping on one of these will cause
+something to happen, but this one is not active at the moment. We will be
+coming back to it later for a part of the tutorial, so you can ignore it for
+now.
+%%%%
+tutorial6 adventuring_3
+
+That concludes the tutorial on magic fundamentals and jewelry. Let's move onto
+something a little more interesting before you're allowed to go. If you went ahead
+and stepped on that pressure plate over in the corner, the wall to the
+south should have opened up, and, additionally, that pressure plate you saw
+earlier should now be active. Buy whatever you want from the merchant, and then
+go ahead and step on the pressure plate. Enter the swamp area to the west
+afterwords.
+%%%%
+tutorial6 adventuring_4
+
+Hopefully you're not too shaken up after that explosion- we had to set up
+the explosives while you were out adventuring. Or maybe the pressure plate
+that you stepped on earlier activated the pressure plate that triggered the
+explosives? Hmmmm. At any rate, head south.

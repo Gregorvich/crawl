@@ -40,7 +40,6 @@
 #include "god-passive.h"
 #include "god-prayer.h"
 #include "god-wrath.h"
-#include "hero-mode.h"
 #include "hints.h"
 #include "hiscores.h"
 #include "invent.h"
@@ -2435,6 +2434,23 @@ static void _gain_piety_point()
     }
 
     do_god_gift();
+}
+
+int hero_mode_modify_piety(int piety)
+{
+    // usk is tactical, oka gives bonus piety for scary monsters (all of them)
+    if (you_worship(GOD_OKAWARU) || you_worship(GOD_USKAYAW))
+        return piety;
+
+    if (you_worship(GOD_ASHENZARI)
+        || you_worship(GOD_NEMELEX_XOBEH)
+        || you_worship(GOD_HEPLIAKLQANA)
+        || you_worship(GOD_RU))
+    {
+        return piety * HERO_MODE_MULTIPLIER_RELIGION * 3; // exploration piety
+    }
+
+    return piety * HERO_MODE_MULTIPLIER_RELIGION;
 }
 
 /**

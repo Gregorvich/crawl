@@ -1141,3 +1141,6 @@ bool need_expiration_warning(coord_def p = you.pos());
 
 bool player_has_orb();
 bool player_on_orb_run();
+
+const int HERO_MODE_MULTIPLIER_EXPERIENCE = 9;
+int hero_mode_modify_exp(int exp);

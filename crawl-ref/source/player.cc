@@ -38,7 +38,6 @@
 #include "god-conduct.h"
 #include "god-passive.h"
 #include "god-wrath.h"
-#include "hero-mode.h"
 #include "hints.h"
 #include "hiscores.h"
 #include "invent.h"
@@ -2608,6 +2607,11 @@ static void _handle_god_wrath(int exp)
             break;
         }
     }
+}
+
+int hero_mode_modify_exp(int exp)
+{
+    return exp * HERO_MODE_MULTIPLIER_EXPERIENCE;
 }
 
 void gain_exp(unsigned int exp_gained, unsigned int* actual_gain)

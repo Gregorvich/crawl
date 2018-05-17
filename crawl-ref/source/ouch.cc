@@ -36,6 +36,7 @@
 #include "fight.h"
 #include "files.h"
 #include "fineff.h"
+#include "food.h"
 #include "ghost.h"
 #include "god-abil.h"
 #include "god-conduct.h"
@@ -739,6 +740,12 @@ static void restore_life_hero_mode()
         you.hp_max_adj_perm++, calc_hp();
     if (you.hp <= 0)
         set_hp(you.hp_max);
+    if (you.duration[DUR_POISONING])
+        you.redraw_hit_points = true;
+    you.duration[DUR_POISONING] = 0;
+    you.disease = 0;
+    you.duration[DUR_CONF] = 0;
+    set_hunger(HUNGER_DEFAULT, true);
 }
 
 static void _handle_teleport_update(bool large_change, const coord_def old_pos)

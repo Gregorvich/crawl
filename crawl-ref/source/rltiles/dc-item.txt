@@ -393,6 +393,7 @@ deep_troll_leather DEEP_TROLL_LEATHER
 iron_troll_leather IRON_TROLL_LEATHER
 
 hunters_armour_1 HUNTERS_ARMOUR_1
+alchemists_robes_1 ALCHEMISTS_ROBES_1
 
 %rim 1
 cloak1_leather ARM_CLOAK
@@ -446,6 +447,7 @@ lshield_louise LSHIELD_LOUISE
 elven_leather_helm THELM_CAP
 cap_jester THELM_CAP_JESTER
 cowl_1 COWL_1
+alchemists_hood_1 ALCHEMISTS_HOOD_1
 
 %rim 0
 hat1 THELM_HAT

@@ -197,3 +197,6 @@ void set_god_ability_slots();
 vector<god_power> get_god_powers(god_type god);
 const god_power* god_power_from_ability(ability_type abil);
 bool god_power_usable(const god_power& power, bool ignore_piety=false, bool ignore_penance=false);
+
+const int HERO_MODE_MULTIPLIER_RELIGION = 9;
+int hero_mode_modify_piety(int piety);

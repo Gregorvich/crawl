@@ -204,6 +204,7 @@ human_male_black_innkeeper MALE_INNKEEPER
 human_female_innkeeper FEMALE_INNKEEPER
 human_male_blacksmith MALE_BLACKSMITH
 elf_male_bowsman ELF_MALE_BOWSMAN
+shady_merchant SHADY_MERCHANT
 
 # Furniture
 %sdir dngn/furniture
@@ -489,10 +490,12 @@ shop_panel_books SHOP_PANEL_BOOKS
 shop_panel_food SHOP_PANEL_FOOD
 shop_panel_jewelry SHOP_PANEL_JEWELRY
 shop_panel_misc SHOP_PANEL_MISC
+shop_panel_misc_2 SHOP_PANEL_MISC_2
 shop_panel_potions SHOP_PANEL_POTIONS
 shop_panel_scrolls SHOP_PANEL_SCROLLS
 shop_panel_staves SHOP_PANEL_STAVES
 shop_panel_weapons SHOP_PANEL_WEAPONS
+shop_panel_magic_armour SHOP_PANEL_MAGIC_ARMOUR
 
 %sdir dngn/gateways
 %rim 0

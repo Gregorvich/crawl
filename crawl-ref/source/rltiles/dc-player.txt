@@ -456,6 +456,12 @@ holy_knight_coat HOLY_KNIGHT_COAT
 holy_knight_coat_with_pants HOLY_KNIGHT_COAT_WITH_PANTS
 hunters_coat HUNTERS_COAT
 hunters_coat_with_pants HUNTERS_COAT_WITH_PANTS
+alchemists_coat ALCHEMISTS_COAT
+alchemists_coat_with_pants ALCHEMISTS_COAT_WITH_PANTS
+alchemists_coat_scrolls ALCHEMISTS_COAT_SCROLLS
+alchemists_coat_scrolls_with_pants ALCHEMISTS_COAT_SCROLLS_WITH_PANTS
+alchemists_coat_scrolls_armoured ALCHEMISTS_COAT_SCROLLS_ARMOURED
+alchemists_coat_scrolls_armoured_with_pants ALCHEMISTS_COAT_SCROLLS_ARMOURED_WITH_PANTS
 
 deep_troll_leather DEEP_TROLL_LEATHER
 iron_troll_leather IRON_TROLL_LEATHER
@@ -494,6 +500,7 @@ glove_short_green GLOVE_SHORT_GREEN
 glove_short_blue GLOVE_SHORT_BLUE
 glove_short_gray GLOVE_SHORT_GRAY LAST_NORM
 hunters_gloves HUNTERS_GLOVES
+alchemists_gloves ALCHEMISTS_GLOVES
 ## mutations
 claws CLAWS
 player/mutations/octopode1 OCTOPODE_SPIKE
@@ -1059,6 +1066,11 @@ turban_brown TURBAN_BROWN
 turban_purple TURBAN_PURPLE HAT_LAST_NORM
 pumpkin PUMPKIN
 hunters_cowl HUNTERS_COWL
+alchemists_hood ALCHEMISTS_HOOD
+iron_helmet_1 IRON_HELMET_1
+iron_helmet_2 IRON_HELMET_2
+iron_helmet_3 IRON_HELMET_3
+iron_helmet_4 IRON_HELMET_4
 
 ## Mutations
 horns1 HORNS1

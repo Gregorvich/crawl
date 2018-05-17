@@ -3,11 +3,37 @@
 -- Arena functions. Many, many functions, including ones that will spawn
 -- enemies, run the countdown, declare which enemies to use for the rounds,
 -- and the Triggerable Function definition itself.
-function is_boss_round_2(round_id)
+function hero_mode_is_boss_round(round_id)
     return round_id % 5 == 0
 end
 
-function hero_mode_spawn_enemies(data)
+function hero_mode_clean_up_arena()
+    for p in iter.rect_iterator(dgn.point(1, 17), dgn.point(22, 38)) do
+        local items = dgn.items_at(p.x, p.y)
+        if #items ~= 0 then
+            dgn.apply_area_cloud(p.x, p.y, 5, 10, 1, 1,
+                                 "translocational energy", "other", 10)
+            iter.stack_destroy(p)
+        end
+        local enemy = dgn.mons_at(p.x, p.y)
+        if enemy then
+            dgn.apply_area_cloud(p.x, p.y, 5, 10, 1, 1,
+                                 "translocational energy", "other", 10)
+            enemy.dismiss()
+        end
+    end
+end
+
+function hero_mode_deal_with_player_death(data)
+    data.between_rounds = true
+    data.round_id = data.active_round
+    data.time_left = 100
+    data.player_died = false
+    hero_mode_clean_up_arena()
+    data.finished = true
+end
+
+function hero_mode_spawn_enemies(data, difficulty)
     -- Find all of the slaves of the triggerable
     local sp = dgn.find_marker_positions_by_prop(data.spawn_dir, 1)
     -- Go through each of our slaves
@@ -17,7 +43,7 @@ function hero_mode_spawn_enemies(data)
         end
         -- Randomly decide whether a monster will spawn in this slave or not
         if crawl.one_chance_in(#sp) then
-            if is_boss_round_2(data.round_id) and not data.boss_spawned then
+            if hero_mode_is_boss_round(data.round_id) and not data.boss_spawned then
                 -- Monster set 2 is the one that contains bosses
                 local enemy = dgn.create_monster(pos.x, pos.y, data.monster_set[2])
                 if enemy == nil then
@@ -26,6 +52,9 @@ function hero_mode_spawn_enemies(data)
                     enemy.set_prop("boss_mons", 1)
                     enemy.beh = mons.behaviour("wander")
                     data.num_spawned = data.num_spawned + 1
+                    if not difficulty == "normal" then
+                        hero_mode_setup_monster(enemy, difficulty)
+                    end
                     data.boss_spawned = true
                     dgn.apply_area_cloud(pos.x, pos.y, 10, 10, 1, 1,
                                          "translocational energy", "other", -1)
@@ -33,13 +62,14 @@ function hero_mode_spawn_enemies(data)
                 end
             else
                 local enemy = dgn.create_monster(pos.x, pos.y, data.monster_set[1])
-                if enemy == nil then
-                    crawl.mpr("Couldn't find enemy!")
-                else
+                if enemy then
                     if enemy.experience > 0 then
                         -- Don't count the enemy if it is some kind of plant
                         enemy.set_prop("arena_slave", 1)
                         data.num_spawned = data.num_spawned + 1
+                        if not difficulty == "normal" then
+                            hero_mode_setup_monster(enemy, difficulty)
+                        end
                     end
                     enemy.beh = mons.behaviour("wander")
                     dgn.apply_area_cloud(pos.x, pos.y, 10, 10, 1, 1,
@@ -51,7 +81,23 @@ function hero_mode_spawn_enemies(data)
     end
 end
 
-function hero_mode_end_round(data)
+-- If there are 50 waves, then there will 10 rounds. Also, there is no need to
+-- save progress if the person completed the arena, since they will just start
+-- on round 45 if he/she re-enters it.
+function hero_mode_save_progress(data)
+    if hero_mode_is_boss_round(data.round_id) or not data.round_id == 50 then
+        current_round = math.floor(data.round_id / 5)
+
+        if current_round > data.progression then
+            data.progression = current_round
+        end
+
+    elseif data.round_id == 50 then
+        crawl.mpr("Unable to save round data.")
+    end
+end
+
+function hero_mode_end_round(data, reward_scale)
     -- Always say we are between rounds after finishing a round,
     -- that way the arena will start off like this if we finish
     -- a boss fight and come back later
@@ -59,14 +105,26 @@ function hero_mode_end_round(data)
     local you_x, you_y = you.pos()
 
     -- Place award for killing boss
-    if is_boss_round_2(data.round_id) then
+    if hero_mode_is_boss_round(data.round_id) then
         crawl.mpr("A rune of Zot has appeared.", "orb")
         -- Runes are placed in the third component of monster sets
         dgn.create_item(you_x, you_y, data.monster_set[3])
+
         data.finished = true
+        hero_mode_save_progress(data)
+        if not data.round_id == 50 then
+            data.active_round = data.round_id + 1
+            if scaling_enabled then
+                local difficulty = hero_mode_retrieve_round_values(data)[1]
+                local reward_scale = hero_mode_retrieve_round_values(data)[2]
+                hero_mode_toggle_numbered_pressure_plates(difficulty, reward_scale)
+            end
+        end
+
         -- We get 10 turns to prepare when we eventually re-enter the
         -- arena
         data.time_left = 100
+
         -- Allow the person to leave after a boss round
         local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
         dgn.terrain_changed(entry_position.x, entry_position.y, "floor", false, false, false)
@@ -81,7 +139,7 @@ function hero_mode_end_round(data)
 
     if data.num_killed >= data.round_enemies then
         data.style_mult = data.style_mult + 1
-        if is_boss_round_2(data.round_id) then
+        if hero_mode_is_boss_round(data.round_id) then
             crawl.mpr("<yellow>Victory achieved!</yellow>", "warning")
             crawl.mpr("<yellow>You have won a prize for killing the boss.</yellow>", "warning")
             -- Some extra score multiplier for killing the boss, since
@@ -97,6 +155,9 @@ function hero_mode_end_round(data)
         gold_gain = gold_gain * math.min(data.style_mult, 5)
     end
 
+    if not reward_scale == 2 then
+        gold_gain = hero_mode_setup_reward(reward_scale, gold_gain)
+    end
     style_gain = style_gain * data.style_mult
     local style_points = dgn.persist.arena_style_points + style_gain
     dgn.persist.arena_style_points = style_points
@@ -611,14 +672,14 @@ end
 function hero_mode_init_boss_table()
     local bs = {}
     if crawl.coinflip() then
-    bs[1] = {"place:Snake", "aizul hd:7 hp:120 / " ..
-             "naga warrior name:naga_warlord n_rpl n_des n_noc col:cyan hp:130 / " ..
-             "anaconda name:giant n_adj n_noc hp:130 col:lightred",
-             "serpentine rune of zot"}
+        bs[1] = {"place:Snake", "aizul hd:7 hp:120 / " ..
+                 "naga warrior name:naga_warlord n_rpl n_des n_noc col:cyan hp:130 / " ..
+                 "anaconda name:giant n_adj n_noc hp:130 col:lightred",
+                 "serpentine rune of zot"}
     else
         bs[1] = {"place:Swamp", "the lernaean hydra / " ..
                  "wizard name:witch n_rpl n_des n_noc col:green hp:130 " ..
-                   "spells:mephitic_cloud.15.wizard;" ..
+                 "spells:mephitic_cloud.15.wizard;" ..
                           "summon_hydra.15.wizard;" ..
                           "invisibility.15.wizard;" ..
                           "teleport_self.15.wizard.emergency",
@@ -687,7 +748,220 @@ function hero_mode_init_boss_table()
     return bs
 end
 
+function hero_mode_setup_monster(difficulty, monster)
+    power = monster.hd
+    health = monster.hp
+
+    -- Scaling is done by reducing or increasing stats by a fourth.
+    -- Monster spawn rates are also adjusted
+    if difficulty == "easy" then
+        power = math.floor(power * (3/4))
+        if power < 1 then
+            power = 1
+        end
+        health = math.floor(monster.hp * (3/4))
+    elseif difficulty == "hard" then
+        power = math.ceil(power * (5/4))
+        health = math.ceil(health * (5/4))
+    end
+
+    monster.hd = power
+    monster.hp = health
+
+    return monster
+end
+
+function hero_mode_setup_reward(reward_scale, gold)
+    if reward_scale == 1 then
+        gold = math.floor(gold / 2)
+    elseif reward_scale == 3 then
+        gold = math.ceil(gold / 2)
+    end
+    return gold
+end
+
+-- Create a table consisting of difficulties that are each associated
+-- with different rewards. The difficulties are in a random order, and
+-- the rewards for each difficulty are also in a random order.
+function hero_mode_initialize_order(data)
+    difficulties = data.difficulties
+    rewards = data.reward_values
+    local randomized_difficulties = {}
+    local number_of_difficulties = #difficulties
+
+    -- Create a list of randomized difficulties
+    for i=1, number_of_difficulties do
+        picked = crawl.random2(#difficulties) + 1
+        randomized_difficulties[i] = difficulties[picked]
+        difficulties = hero_mode_remove_element(difficulties, i)
+    end
+
+    -- Create our table of combinations, where each difficulty will be
+    -- associated with a certain number of rewards
+    table_of_combinations = {}
+    for i=1, #randomized_difficulties do
+        -- For each randomized difficulty, create a list of randomized
+        -- rewards that will be associated with it.
+        local randomized_rewards = {}
+        local number_of_rewards = #rewards
+        for j=1, number_of_rewards do
+            picked = crawl.random2(#rewards) + 1
+            randomized_rewards[j] = rewards[picked]
+            rewards = hero_mode_remove_element(rewards, j)
+        end
+
+        entry = {randomized_difficulties[i], randomized_rewards}
+        table_of_combinations[i] = entry
+    end
+
+    data.difficulty_and_reward_table = table_of_combinations
+end
+
+function hero_mode_retrieve_round_values(data)
+    local round_values = {}
+    if data.round_id <= 5 then
+        entry = data.difficulty_and_reward_table[1]
+        difficulty = entry[1]
+        reward = entry[2][1]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 5 and data.round_id <=10 then
+        entry = data.difficulty_and_reward_table[1]
+        difficulty = entry[1]
+        reward = entry[2][2]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 10 and data.round_id <= 15 then
+        entry = data.difficulty_and_reward_table[1]
+        difficulty = entry[1]
+        reward = entry[2][3]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 15 and data.round_id <= 20 then
+        entry = data.difficulty_and_reward_table[2]
+        difficulty = entry[1]
+        reward = entry[2][1]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 20 and data.round_id <= 25 then
+        entry = data.difficulty_and_reward_table[2]
+        difficulty = entry[1]
+        reward = entry[2][2]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 25 and data.round_id <= 30 then
+        entry = data.difficulty_and_reward_table[2]
+        difficulty = entry[1]
+        reward = entry[2][3]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 30 and data.round_id <= 35 then
+        entry = data.difficulty_and_reward_table[3]
+        difficulty = entry[1]
+        reward = entry[2][1]
+        round_values = {difficulty, reward}
+    elseif data.round_id > 35 and data.round_id <= 40 then
+        entry = data.difficulty_and_reward_table[3]
+        difficulty = entry[1]
+        reward = entry[2][2]
+        round_values = {difficulty, reward}
+    else
+        entry = data.difficulty_and_reward_table[3]
+        difficulty = entry[1]
+        reward = entry[2][3]
+        round_values = {difficulty, reward}
+    end
+
+    return round_values
+end
+
+function hero_mode_toggle_numbered_pressure_plates(difficulty, reward_scale)
+    local my_slaves = {}
+    for i=1, 6 do
+        my_slaves[i] = dgn.find_marker_positions_by_prop("number_panel", i)[1]
+    end
+    local index = 0
+    for _, pos in ipairs(my_slaves) do
+        index = index + 1
+        if index == 1 or index == 4 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_1_inactive")
+        elseif index == 2 or index == 5 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_2_inactive")
+        elseif index == 3 or index == 6 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_3_inactive")
+        end
+    end
+
+    if difficulty == "easy" then
+        local position = my_slaves[1]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_1_active")
+    elseif difficulty == "normal" then
+        local position = my_slaves[2]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_2_active")
+    elseif difficulty == "hard" then
+        local position = my_slaves[3]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_3_active")
+    end
+
+    if reward_scale == 1 then
+        local position = my_slaves[4]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_1_active")
+    elseif reward_scale == 2 then
+        local position = my_slaves[5]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_2_active")
+    elseif reward_scale == 3 then
+        local position = my_slaves[6]
+        dgn.tile_floor_changed(position.x, position.y, "pressure_plate_number_3_active")
+    end
+end
+
+function hero_mode_disable_numbered_pressure_plates()
+    local my_slaves = {}
+    for i=1, 6 do
+        my_slaves[i] = dgn.find_marker_positions_by_prop("number_panel", i)[1]
+    end
+    local index = 0
+    for _, pos in ipairs(my_slaves) do
+        index = index + 1
+        if index == 1 or index == 4 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_1")
+        elseif index == 2 or index == 5 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_2")
+        elseif index == 3 or index == 6 then
+            dgn.tile_floor_changed(pos.x, pos.y, "pressure_plate_number_3")
+        end
+    end
+end
+
+function hero_mode_remove_element(table, index)
+    new_table = {}
+    for i=1, (#table - 1) do
+        if i < index then
+            new_table[i] = table[i]
+        elseif i > index then
+            new_table[i] = table[i + 1]
+        end
+    end
+    return new_table
+end
+
 function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
+    -- The arena marker will keep track of difficulties and rewards for two
+    -- reasons. So we can change tiles accordingly, and because it kind of makes
+    -- sense for the arena to manage this.
+    if not data.table_initialized then
+        hero_mode_initialize_order(data)
+        data.table_initialized = true
+    end
+
+    if data.toggle_scaling and data.scaling_enabled then
+        data.table_initialized = false
+        data.scaling_enabled = false
+        data.toggle_scaling = false
+        hero_mode_disable_numbered_pressure_plates()
+    elseif (data.toggle_scaling and not data.scaling_enabled)
+            and data.table_initialized then
+        data.scaling_enabled = true
+        data.toggle_scaling = false
+        local difficulty = hero_mode_retrieve_round_values(data)[1]
+        local reward_scale = hero_mode_retrieve_round_values(data)[2]
+        hero_mode_toggle_numbered_pressure_plates(difficulty, reward_scale)
+    end
+
     if data.finished then
         return
     end
@@ -702,7 +976,12 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
         end
         if data.num_killed >= data.round_enemies then
             -- You win the round
-            hero_mode_end_round(data)
+            if data.scaling_enabled then
+                local reward_scale = hero_mode_retrieve_round_values(data)[2]
+                hero_mode_end_round(data, reward_scale)
+            else
+                hero_mode_end_round(data, 2)
+            end
         end
         return
     end
@@ -728,7 +1007,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
             if data.time_left <= 0 then
                 crawl.take_note("Round " .. data.round_id .. ".")
                 crawl.mpr("ROUND " .. data.round_id .. "!", "warning")
-                if is_boss_round_2(data.round_id) then
+                if hero_mode_is_boss_round(data.round_id) then
                     crawl.mpr("BOSS ROUND!", "warning")
                 else
                     crawl.mpr("FIGHT!", "warning")
@@ -740,7 +1019,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
                 -- Non-boss rounds will contain more enemies and the number
                 -- for these rounds will be further randomized.
                 data.round_enemies = 5 + crawl.div_rand_round(data.round_id, 3)
-                if not is_boss_round_2(data.round_id) then
+                if not hero_mode_is_boss_round(data.round_id) then
                     data.round_enemies = data.round_enemies + crawl.random2(crawl.div_rand_round(data.round_id, 3))
                 end
                 crawl.dpr("Number to spawn: " .. data.round_enemies .. ".")
@@ -752,7 +1031,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
                 data.num_spawned = 0
                 data.boss_spawned = false
                 data.monster_set = hero_mode_get_monster_set(data.round_id,
-                                                   is_boss_round_2(data.round_id))
+                                                   hero_mode_is_boss_round(data.round_id))
 
                 -- 50% chance of picking a specific direction to spawn from, else
                 -- spawn from all four directions
@@ -767,6 +1046,11 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
                 data.between_rounds = false
             end
         else
+            if data.player_died then
+                hero_mode_deal_with_player_death(data)
+                return
+            end
+
             if data.num_spawned >= data.round_enemies or data.spawn_timer > 3000 then
                 -- Start countdown to end the round. Will start at just above 50
                 -- turns. This will activate when all enemies have spawned or when
@@ -784,11 +1068,22 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
             end
 
             if data.spawn_timer % data.spawn_rate == 0 or data.num_spawned == 0 then
-                hero_mode_spawn_enemies(data)
+                if data.scaling_enabled then
+                    local difficulty = hero_mode_retrieve_round_values(data)[1]
+                    hero_mode_spawn_enemies(data, difficulty)
+                else
+                    -- Pass in the default value if scaling is not enabled
+                    hero_mode_spawn_enemies(data, "normal")
+                end
             end
 
             if data.time_left <= 0 then
-                hero_mode_end_round(data)
+                if data.scaling_enabled then
+                    local reward_scale = hero_mode_retrieve_round_values[2]
+                    hero_mode_end_round(data, reward_scale)
+                else
+                    hero_mode_end_round(data, 2)
+                end
             end
         end
     end
@@ -807,44 +1102,75 @@ function hero_mode_calculate_score(won)
 end
 
 function hero_mode_start_arena(data, triggerable, triggerer, marker, ev)
-    if not data.enabled then
-        return
+    if data.enabled then
+        local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
+        dgn.terrain_changed(entry_position.x, entry_position.y, "rock_wall", false, false, false)
+        crawl.mpr("<blue>The arena gate slams shut behind you.</blue>")
+        local marker_1 = data.marker
+        marker_1.data.finished = false
+        data.enabled = false
     end
-
-    local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
-    dgn.terrain_changed(entry_position.x, entry_position.y, "rock_wall", false, false, false)
-    crawl.mpr("<blue>The arena gate slams shut behind you.</blue>")
-
-    local marker_1 = data.marker
-    marker_1.data.finished = false
-    data.enabled = false
 end
 
 function hero_mode_toggle_pressure_plate(data, triggerable, triggerer, marker, ev)
-    local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
-    local marker_1 = data.marker
-    if data.arena_running then
-        dgn.terrain_changed(entry_position.x, entry_position.y, "rock_wall", false, false, false)
-        crawl.mpr("<blue>The arena gate closes. Come back later if you want to " ..
-                  "start the next round.</blue>")
-        marker_1.data.enabled = false
-        data.arena_running = false
-        for p in iter.rect_iterator(dgn.point(1, 17), dgn.point(22, 38)) do
-            local items = dgn.items_at(p.x, p.y)
-            if #items ~= 0 then
-                dgn.apply_area_cloud(p.x, p.y, 5, 10, 1, 1,
-                                     "translocational energy", "other", 10)
-                iter.stack_destroy(p)
-            end
-        end
-    else
+    if not data.arena_running then
+        local pressure_plate_1_position = dgn.find_marker_positions_by_prop("pressure_plate", 1)[1]
+        dgn.tile_floor_changed(pressure_plate_1_position.x, pressure_plate_1_position.y,
+            "pressure_plate_pressed")
+
+        local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
         dgn.terrain_changed(entry_position.x, entry_position.y, "floor", false, false, false)
         crawl.mpr("<blue>The arena gate slides open. Proceed into the arena if you " ..
                   "want to start the next round</blue>")
+
+        local marker_1 = data.marker
         marker_1.data.enabled = true
         data.arena_running = true
     end
 end
+
+function hero_mode_disable_arena(data, triggerable, triggerer, marker, ev)
+    marker_1 = data.marker
+    arena_is_running = marker_1.data.arena_running
+    if arena_is_running then
+        hero_mode_clean_up_arena()
+        local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
+        local pressure_plate_1_position = dgn.find_marker_positions_by_prop("pressure_plate", 1)[1]
+
+        dgn.terrain_changed(entry_position.x, entry_position.y, "rock_wall", false, false, false)
+        dgn.tile_floor_changed(pressure_plate_1_position.x, pressure_plate_1_position.y,
+            "pressure_plate_active")
+
+        crawl.mpr("<blue>The arena gate closes. Come back later if you want to " ..
+                  "start the next round.</blue>")
+
+        marker_1 = data.marker
+        marker_1.data.arena_running = false
+    end
+end
+
+function hero_mode_manage_arena_death(data, triggerable, triggerer, marker, ev)
+    marker_1 = data.marker_1
+    arena_is_running = marker_1.data.arena_running
+    if arena_is_running then
+        local arena_marker = data.marker_2
+        arena_marker.data.player_died = true
+
+        local entry_position = dgn.find_marker_positions_by_prop("entry_way", 1)[1]
+        local pressure_plate_1_position = dgn.find_marker_positions_by_prop("pressure_plate", 1)[1]
+
+        dgn.terrain_changed(entry_position.x, entry_position.y, "rock_wall", false, false, false)
+        dgn.tile_floor_changed(pressure_plate_1_position.x, pressure_plate_1_position.y, 
+            "pressure_plate_active")
+
+        crawl.mpr("<yellow>The arena closes. Re-enter it if you want to try again.</yellow>")
+
+        data.arena_running = false
+        marker_1 = data.marker_1
+        marker_1.data.arena_running = false
+    end
+end
+
 -- Tutorial functions. Some stuff is similar to the arena functions
 -- because the tutorial uses monster spawning.
 require("dlua/tutorial.lua")
@@ -853,19 +1179,6 @@ tutorial6 = {}
 
 function tutorial6.msg(text)
     return tutorial_msg("tutorial6 " .. text)
-end
-
-function hero_mode_rat_death(data, triggerable, triggerer, marker, ev)
-    data.num_killed = data.num_killed + 1
-    if data.num_killed == 3 then
-        crawl.tutorial_msg("tutorial6 food")
-    end
-end
-
-function hero_mode_sword_move(data, triggerable, triggerer, marker, ev)
-    crawl.tutorial_msg("tutorial6 picking_up_items")
-    crawl.tutorial_msg("tutorial6 equipping_items")
-    crawl.tutorial_msg("tutorial6 armour")
 end
 
 function hero_mode_armour_pickup(data, triggerable, triggerer, marker, ev)
@@ -877,40 +1190,274 @@ function hero_mode_boots_pickup(data, triggerable, triggerer, marker, ev)
 end
 
 function hero_mode_raise_bridge(data, triggerable, triggerer, marker, ev)
-    data.goblins_killed = data.goblins_killed + 1
-    if data.goblins_killed == 2 then
-        local my_slaves = dgn.find_marker_positions_by_prop("submerged_bridge", 1)
-        for _, pos in ipairs(my_slaves) do
-            dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
-            if you.see_cell(pos.x, pos.y) then
-                crawl.mpr("<blue>You hear a rush of water. A bridge rises from the "
-                          .. "river!</blue>")
-            else
-                crawl.mpr("<blue>You hear a rush of water in the distance</blue>")
-            end
-        end
-        local rock_wall_position = dgn.find_marker_positions_by_prop("stone_wall", 1)[1]
-        dgn.terrain_changed(rock_wall_position.x, rock_wall_position.y, "floor", false, false, false)
-        if you.see_cell(rock_wall_position.x, rock_wall_position.y) then
-            crawl.mpr("<green>A wall also slides away</green>")
+    pressure_plate_3_position = dgn.find_marker_positions_by_prop("pressure_plate", 3)[1]
+    dgn.tile_floor_changed(pressure_plate_3_position.x, pressure_plate_3_position.y,
+        "pressure_plate_pressed")
+    crawl.mpr("<yellow>You hear a click.</yellow>")
+
+    local my_slaves = dgn.find_marker_positions_by_prop("submerged_bridge", 1)
+    for _, pos in ipairs(my_slaves) do
+        dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
+        if you.see_cell(pos.x, pos.y) then
+            crawl.mpr("<blue>You hear a rush of water. A bridge rises from the "
+                      .. "river!</blue>")
         else
-            crawl.mpr("<green>You also hear a distant sliding sound</green>")
+            crawl.mpr("<blue>You hear a rush of water in the distance.</blue>")
         end
+    end
+    local rock_wall_position = dgn.find_marker_positions_by_prop("stone_wall", 1)[1]
+    dgn.terrain_changed(rock_wall_position.x, rock_wall_position.y, "floor", false, false, false)
+    if you.see_cell(rock_wall_position.x, rock_wall_position.y) then
+        crawl.mpr("<green>A wall also slides away.</green>")
+    else
+        crawl.mpr("<green>You also hear a distant sliding sound.</green>")
     end
 end
 
 function hero_mode_melt_ice(data, triggerable, triggerer, marker, ev)
-    data.goblins_killed = data.goblins_killed + 1
-    if data.goblins_killed == 1 then
-        local ice_block_position = dgn.find_marker_positions_by_prop("ice_block", 1)[1]
-        dgn.terrain_changed(ice_block_position.x, ice_block_position.y, "floor", false, false, false)
-        if you.see_cell(ice_block_position.x, ice_block_position.y) then
-            crawl.mpr("<lightblue>The ice block on the bridge melts</lightblue>")
-        else
-            crawl.mpr("<lightblue>You hear a distant slushing sound</lightblue>")
+    pressure_plate_4_position = dgn.find_marker_positions_by_prop("pressure_plate", 4)[1]
+    dgn.tile_floor_changed(pressure_plate_4_position.x, pressure_plate_4_position.y,
+        "pressure_plate_pressed")
+    crawl.mpr("<yellow>You hear a click.</yellow>")
+
+    local ice_block_position = dgn.find_marker_positions_by_prop("ice_block", 1)[1]
+    dgn.terrain_changed(ice_block_position.x, ice_block_position.y, "floor", false, false, false)
+    if you.see_cell(ice_block_position.x, ice_block_position.y) then
+        crawl.mpr("<lightblue>The ice block on the bridge melts.</lightblue>")
+    else
+        crawl.mpr("<lightblue>You hear a distant slushing sound.</lightblue>")
+    end
+end
+
+function hero_mode_open_wall(data, triggerable, triggerer, marker, ev)
+    pressure_plate_5_position = dgn.find_marker_positions_by_prop("pressure_plate", 5)[1]
+    dgn.tile_floor_changed(pressure_plate_5_position.x, pressure_plate_5_position.y,
+        "pressure_plate_pressed")
+    crawl.mpr("<yellow>you hear a click</yellow>")
+
+    local stone_wall_position = dgn.find_marker_positions_by_prop("stone_wall", 2)[1]
+    dgn.terrain_changed(stone_wall_position.x, stone_wall_position.y, "floor", false, false, false)
+    if you.see_cell(stone_wall_position.x, stone_wall_position.y) then
+        crawl.mpr("<green>The rock wall slides away.</green>")
+    else
+        crawl.mpr("<green>You hear a distant sliding sound.</green>")
+    end
+
+    marker_1 = data.marker
+    marker_1.data.active = true
+end
+
+function hero_mode_blow_up_wall(data, triggerable, triggerer, marker, ev)
+    if data.already_pressed then
+        return
+    end
+
+    if triggerer.type == "player_move" and not data.active then
+        crawl.mpr("<yellow>You hear a click...</yellow>")
+        crawl.more()
+        crawl.mpr("<yellow>Nothing happens.</yellow>")
+    elseif triggerer.type == "player_move" and data.active then
+        local pressure_plate_6_position = dgn.find_marker_positions_by_prop("pressure_plate", 6)[1]
+        dgn.tile_floor_changed(pressure_plate_6_position.x, pressure_plate_6_position.y,
+            "pressure_plate_pressed")
+        crawl.mpr("<yellow>You hear a click...</yellow>")
+
+        local my_wall_slaves = dgn.find_marker_positions_by_prop("rock_wall", 1)
+        local my_floor_slaves = dgn.find_marker_positions_by_prop("ground", 1)
+        for _, pos in ipairs(my_wall_slaves) do
+            dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
+        end
+        for _, pos in ipairs(my_floor_slaves) do
+            dgn.terrain_changed(pos.x, pos.y, "rock_wall", false, false, false)
+        end
+
+        crawl.mpr("<red>You hear a loud explosion!</red>")
+        crawl.mpr("<red>Some of the wall to west of the cathedral has opened up.</red>")
+        data.active = false
+        data.already_pressed = true
+    end
+end
+
+function hero_mode_manage_monsters(data, triggerable, triggerer, marker, ev)
+    if (triggerer.type == "turn" and triggerer.sub_type == "countdown")
+            and not data.monsters_initialized then
+        local gxm, gym = dgn.max_bounds()
+        local count = 1
+        for p in iter.rect_iterator(dgn.point(1, 1), dgn.point(gxm - 2, gym - 2)) do
+            local monster = dgn.mons_at(p.x, p.y)
+            if monster then
+                monster_information = {x = p.x, y = p.y, name = monster.db_name,
+                    hp = monster.hp, hd = monster.hd, beh = monster.beh}
+                data.monster_list[count] = monster_information
+                count = count + 1
+            end
+        end
+        data.monsters_initialized = true
+    end
+
+    if not data.respawn_monsters then
+        return
+    end
+
+    if triggerer.type == "turn" and triggerer.sub_type == "countdown" then
+        local gxm, gym = dgn.max_bounds()
+        for p in iter.rect_iterator(dgn.point(1, 1), dgn.point(gxm - 2, gym - 2)) do
+            local monster = dgn.mons_at(p.x, p.y)
+            if monster then
+                if not monster.unique then
+                    monster.dismiss()
+                end
+            end
+        end
+
+        for p in iter.rect_iterator(dgn.point(1, 1), dgn.point(gxm - 2, gym - 2)) do
+            for i=1, #data.monster_list do
+                local monster_data = data.monster_list[i] 
+                starting_position_x = monster_data["x"]
+                starting_position_y = monster_data["y"]
+                if starting_position_x == p.x and starting_position_y == p.y then
+                    monster_name = monster_data["name"]
+                    monster = dgn.create_monster(p.x, p.y, monster_name)
+                    if monster then
+                        monster.set_max_hp(monster_data["hp"])
+                        monster.hd = monster_data["hd"]
+                        monster.beh = monster_data["beh"]
+                    end
+                end
+            end
+
+            -- Restore the health of bosses if the player failed to kill one of them
+            local monster = dgn.mons_at(p.x, p.y)
+            if monster then
+                if monster.unique then
+                    for i=1, #data.monster_list do
+                        local monster_data = data.monster_list[i]
+                        if monster.db_name == monster_data["name"] then
+                            monster.set_max_hp(monster_data["hp"])
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Close all doors
+        doors = dgn.find_marker_positions_by_prop("door", 1)
+        for _, pos in ipairs(doors) do
+            dgn.terrain_changed(pos.x, pos.y, "closed_door", false, false, false)
+        end
+
+        data.respawn_monsters = false
+        crawl.mpr("<cyan>You sense that enemies have appeared nearby.</cyan>")
+    end
+end
+
+function hero_mode_set_monster_respawning(data, triggerable, triggerer, marker, ev)
+    marker_1 = data.marker
+    marker_1.data.respawn_monsters = true
+end
+
+function hero_mode_set_monster_respawning_2(data, triggerable, triggerer, marker, ev)
+    if triggerer.type == "player_move" then
+        data.respawn_pending = true
+    end
+
+    if triggerer.type == "turn" and triggerer.sub_type == "countdown" then
+        -- Check if the player has recently stepped on the respawn point, and if
+        -- we are waiting to reset monsters.
+        if not data.respawn_pending then
+            return
+        end
+
+        -- Check if the arena has finished cleaning up yet.
+        marker_2 = data.marker_2
+        arena_running = not marker_2.data.finished
+        if arena_running then
+            return
+        end
+
+        marker_1 = data.marker_1
+        marker_1.data.respawn_monsters = true
+        data.respawn_pending = false
+    end
+end
+
+function hero_mode_open_gate(data, triggerable, triggerer, marker, ev)
+    pressure_plate_2_position = dgn.find_marker_positions_by_prop("pressure_plate", 2)[1]
+    dgn.tile_floor_changed(pressure_plate_2_position.x, pressure_plate_2_position.y,
+        "pressure_plate_pressed")
+    crawl.mpr("<yellow>You hear a click.</yellow>")
+
+    my_slaves = dgn.find_marker_positions_by_prop("gate_part", 1)
+    for _, pos in ipairs(my_slaves) do
+        dgn.terrain_changed(pos.x, pos.y, "floor", false, false, false)
+    end
+    crawl.mpr("<brown>The large gate creaks open.</brown>")
+end
+
+function hero_mode_enable_arena_scaling(data, triggerable, triggerer, marker, ev)
+    if data.active then
+        pressure_plate_7_position = dgn.find_marker_positions_by_prop("pressure_plate", 7)[1]
+        dgn.tile_floor_changed(pressure_plate_7_position.x, pressure_plate_7_position.y,
+            "pressure_plate_pressed")
+        crawl.mpr("<yellow>You hear a click.</yellow>")
+        crawl.mpr("<lightblue>Level scaling is now enabled in the arena</lightblue>")
+
+        arena_marker = data.marker_1
+        arena_marker.data.toggle_scaling = true
+        data.active = false
+    end
+end
+
+function hero_mode_disable_arena_scaling(data, triggerable, triggerer, marker, ev)
+    if data.active then
+        pressure_plate_8_position = dgn.find_marker_positions_by_prop("pressure_plate", 8)[1]
+        dgn.tile_floor_changed(pressure_plate_8_position.x, pressure_plate_8_position.y,
+            "pressure_plate_pressed")
+        crawl.mpr("<yellow>You hear a click.</yellow>")
+        crawl.mpr("<lightblue>Level scaling is now disabled in the arena</lightblue>")
+
+        arena_marker = data.marker_1
+        arena_marker.data.toggle_scaling = true
+        data.active = false
+    end
+end
+
+function hero_mode_manage_pressure_plates_1(data, triggerable, triggerer, marker, ev)
+    if triggerer.type == "turn" or triggerer.sub_type == "countdown" then
+        local arena_marker = data.marker_1
+        local enable_arena_scaling_marker = data.marker_2
+        local disable_arena_scaling_marker = data.marker_3
+
+        -- Reactivate disabled markers
+        if arena_marker.data.scaling_enabled and disable_arena_scaling_marker.data.active == false then
+            disable_arena_scaling_marker.data.active = true
+            pressure_plate_8_position = dgn.find_marker_positions_by_prop("pressure_plate", 8)[1]
+            dgn.tile_floor_changed(pressure_plate_8_position.x, pressure_plate_8_position.y,
+                "pressure_plate_active")
+        elseif not arena_marker.data.scaling_enabled and enable_arena_scaling_marker.data.active == false then
+            enable_arena_scaling_marker.data.active = true
+            pressure_plate_7_position = dgn.find_marker_positions_by_prop("pressure_plate", 7)[1]
+            dgn.tile_floor_changed(pressure_plate_7_position.x, pressure_plate_7_position.y,
+                "pressure_plate_active")
         end
     end
 end
+
+-- Make this marker global so that markers in other maps can access its data
+monster_management_marker = TriggerableFunction:new {
+    func = "hero_mode_manage_monsters",
+    data = {
+        monster_list = {},
+        monsters_initialized = false,
+        respawn_monsters = false
+    },
+    repeated = true
+}
+
+monster_management_marker:add_triggerer(DgnTriggerer:new {
+    type = "turn",
+    delay = 1
+})
 }}
 
 
@@ -920,7 +1467,6 @@ TAGS: hero_mode no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
 DESC: An Arena
 ORIENT: encompass
 SUBVAULT: a : arena_ring_2
-SUBVAULT: b : barracks_2
 SUBVAULT: g : grassy_area_2
 SUBVAULT: m : training_area_2
 SUBVAULT: c : rocky_path_2
@@ -936,83 +1482,80 @@ MAP
                                                hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
                                                hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
                                                hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                                               hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmm
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmm
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmdddddddddddddd
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmdddddddddddddd
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmdddddddddddddd
-ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmdddddddddddddd
-ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmdddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
-ggggggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                                fffffffffffffffhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxfffffffffffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxfffffffffffmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+aaaaaaaaaaaaaaaaaaaaaaeeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxsssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+iiiiiiiiiiiiiiiiiiiiiieeeeeeeexxxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmmmmmmm
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmddddddddddddddddddd
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmddddddddddddddddddd
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmddddddddddddddddddd
+ggggggggggggggggggggggggggggggggcccccccccccccccccccmmmmmmmmddddddddddddddddddd
+ggggggggggggggggggggggggggggggggxxxxxxxxxxxxxxxxxxxmmmmmmmmddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggggggggggggggggggggggggdddddddddddddddddddddddddddddddddddddddddddddd
 ENDMAP
 
 NAME: Arena_Ring_2
-TAGS: arena_ring_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+TAGS: arena_ring_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_exits
 KFEAT: a = m
 FTILE: . = floor_sand
 RTILE: x = wall_brick_brown
 TILE: a = wall_brick_brown
-#MONS: kobold, big_kobold
-#FTILE: 1 = floor_sand
-#FTILE: 2 = floor_sand
 {{
     local arena_marker = TriggerableFunction:new {
         func = "hero_mode_manage_arena",
@@ -1030,6 +1573,16 @@ TILE: a = wall_brick_brown
             monster_set = {},
             style_mult = 1,
             spawn_dir = "",         -- Which spawn points will enemies come from?
+            progression = 1,        -- A player's progression through the arena rounds
+            active_round = 1,       -- The round the player will start at the next time he/she enters the arena
+            player_died = false,    -- Keep track of whether the player died so that we can clean up the arena
+            difficulty_and_reward_table = {}, -- The randomized combination of difficulties and rewards
+                                              -- organized into a lua table
+            table_initialized = false,
+            difficulties = {"easy", "normal", "hard"},
+            reward_values = {1, 2, 3},
+            scaling_enabled = false,         -- whether we want to begin scaling difficulty and rewards
+            toggle_scaling = false
         },
         repeated = true
     }
@@ -1047,6 +1600,8 @@ TILE: a = wall_brick_brown
         delay = 1
     })
 
+    -- This marker is in charge of starting the arena when the
+    -- player steps on a specific space.
     local pressure_plate_2_marker = TriggerableFunction:new {
         func = "hero_mode_start_arena",
         data = {
@@ -1060,6 +1615,10 @@ TILE: a = wall_brick_brown
         type = "player_move"
     })
 
+    -- This marker is in charge of enabling the second marker. This is
+    -- necessary since the second marker will disable itself when the
+    -- player enters the arena, and so will need something to re-enable
+    -- it.
     local pressure_plate_1_marker = TriggerableFunction:new {
         func = "hero_mode_toggle_pressure_plate",
         data = {
@@ -1073,6 +1632,98 @@ TILE: a = wall_brick_brown
         type = "player_move"
     })
 
+    -- This marker is in charge of disabling the arena if the player changes
+    -- his/her mind and decides to leave, or if he/she just finished a round
+    -- and is now leaving.
+    local pressure_plate_3_marker = TriggerableFunction:new {
+        func = "hero_mode_disable_arena",
+        data = {
+            arena_running = false,
+            marker = pressure_plate_1_marker
+        },
+        repeated = true
+    }
+
+    pressure_plate_3_marker:add_triggerer(DgnTriggerer:new {
+        type = "player_move"
+    })
+
+    local manage_arena_death_marker = TriggerableFunction:new {
+        func = "hero_mode_manage_arena_death",
+        data = {
+            arena_running = false,
+            marker_1 = pressure_plate_1_marker,
+            marker_2 = arena_marker
+        },
+        repeated = true
+    }
+
+    manage_arena_death_marker:add_triggerer(DgnTriggerer:new {
+        type = "player_move"
+    })
+
+    -- This marker will have to keep track of whether the arena has finished
+    -- cleaning up before allowing all monsters to respawn.
+    local set_monster_respawning_marker_1 = TriggerableFunction:new {
+        func = "hero_mode_set_monster_respawning_2",
+        data = {
+            marker_1 = monster_management_marker,
+            marker_2 = arena_marker,
+            respawn_pending = false
+        },
+        repeated = true
+    }
+
+    set_monster_respawning_marker_1:add_triggerer(DgnTriggerer:new {
+        type = "player_move"
+    })
+
+    set_monster_respawning_marker_1:add_triggerer(DgnTriggerer:new {
+        type = "turn",
+        delay = 1
+    })
+
+    local enable_arena_scaling_marker = TriggerableFunction:new {
+        func = "hero_mode_enable_arena_scaling",
+        data = {
+            marker_1 = arena_marker,
+            active = true
+        },
+        repeated = true
+    }
+
+    enable_arena_scaling_marker:add_triggerer(DgnTriggerer:new {
+        type = "player_move"
+    })
+
+    local disable_arena_scaling_marker = TriggerableFunction:new {
+        func = "hero_mode_disable_arena_scaling",
+        data = {
+            marker_1 = arena_marker,
+            active = false
+        },
+        repeated = true
+    }
+
+    disable_arena_scaling_marker:add_triggerer(DgnTriggerer:new {
+        type = "player_move"
+    })
+
+    local manage_pressure_plates_1_marker = TriggerableFunction:new {
+        func = "hero_mode_manage_pressure_plates_1",
+        data = {
+            marker_1 = arena_marker,
+            marker_2 = enable_arena_scaling_marker,
+            marker_3 = disable_arena_scaling_marker
+        },
+        repeated = true
+    }
+
+    manage_pressure_plates_1_marker:add_triggerer(DgnTriggerer:new {
+        type = "turn",
+        delay = 1
+    })
+
     dgn.persist.boss_set = hero_mode_init_boss_table()
 
     -- Store this in dgn.persist rather than arena_marker.data because
@@ -1081,6 +1732,7 @@ TILE: a = wall_brick_brown
     dgn.persist.calc_score = global_function("hero_mode_calculate_score");
 
     lua_marker("A", arena_marker)
+    lua_marker("A", portal_desc {arena = 1})
     lua_marker("J", portal_desc {entry_way = 1})
     lua_marker("B", portal_desc {spawn_point = 1, north = 1})
     lua_marker("C", portal_desc {spawn_point = 1, east = 1})
@@ -1092,9 +1744,24 @@ TILE: a = wall_brick_brown
     lua_marker("I", portal_desc {spawn_point = 1, south = 1, east = 1})
 
     lua_marker("Y", pressure_plate_1_marker)
+    lua_marker("Y", portal_desc {pressure_plate = 1})
     lua_marker("Z", pressure_plate_2_marker)
-
-    set_feature_name("dry_fountain", "spawn point")
+    lua_marker("W", pressure_plate_3_marker)
+    lua_marker("W", portal_desc {pressure_plate = 3})
+    lua_marker("o", manage_arena_death_marker)
+    lua_marker("o", portal_desc {arena_death = 1})
+    lua_marker("o", set_monster_respawning_marker_1)
+    lua_marker("1", portal_desc {number_panel = 1})
+    lua_marker("2", portal_desc {number_panel = 2})
+    lua_marker("3", portal_desc {number_panel = 3})
+    lua_marker("4", portal_desc {number_panel = 4})
+    lua_marker("5", portal_desc {number_panel = 5})
+    lua_marker("6", portal_desc {number_panel = 6})
+    lua_marker("r", enable_arena_scaling_marker)
+    lua_marker("r", portal_desc {pressure_plate = 7})
+    lua_marker("y", disable_arena_scaling_marker)
+    lua_marker("y", portal_desc {pressure_plate = 8})
+    lua_marker("u", manage_pressure_plates_1_marker)
 }}
 KFEAT: BCDEFGHI = dry_fountain
 KFEAT: A = rock_wall
@@ -1102,7 +1769,7 @@ KFEAT: ,YZ = floor
 KFEAT: J = rock_wall
 TILE: BCDEFGHI = floor_rough_magenta
 TILE: Z = floor_sand
-TILE: Y" = floor_cobble_blood
+FTILE: Y = pressure_plate_active
 TILE: J = dngn_grate
 TILE: cA = wall_sandstone
 KFEAT: deghi = civilian
@@ -1118,7 +1785,36 @@ FTILE: s = sand_bench
 FTILE: f = sand_bench_floor
 FTILE: l = sand_bench_stairs
 FTILE: deghijk = sand_bench
-KPROP: ZJY".sfl = no_tele_into
+KPROP: ZJY.sfl = no_tele_into
+KFEAT: bpqKLMNOPQRSTW123456ruy = .
+KFEAT: m = x
+FTILE: b = floor_cobble_blood
+RTILE: m = wall_catacombs
+KPROP: b = no_tele_into
+KFEAT: o = ominous_space
+TILE: o = spooky_grass_spawn_point_blue
+FTILE: p = spooky_grass_edge_east_blue
+FTILE: q = spooky_grass_edge_west_blue
+FTILE: K = spooky_grass_edge_south_blue
+FTILE: L = spooky_grass_edge_north_blue
+FTILE: M = spooky_grass_edge_se_blue
+FTILE: N = spooky_grass_edge_sw_blue
+FTILE: O = spooky_grass_edge_nw_blue
+FTILE: P = spooky_grass_edge_ne_blue
+FTILE: Q = graveyard_grass
+FTILE: R = spooky_grass_energy_blue
+FTILE: S = spooky_grass_energy_2_blue
+FTILE: T = spooky_grass_blue
+FTILE: t = graveyard_grass
+FTILE: W = floor_cobble_blood
+FTILE: 14 = pressure_plate_number_1
+FTILE: 25 = pressure_plate_number_2
+FTILE: 36 = pressure_plate_number_3
+FTILE: r = pressure_plate_active
+FTILE: y = pressure_plate_pressed
+FTILE: u = floor_cobble_blood
+KITEM: v = potion of heal wounds q:10
+FTILE: v = floor_cobble_blood
 
 MAP
 xxxxxxxxxxxxxxxxxxxxxx
@@ -1128,43 +1824,21 @@ xfsgsesfsdssisfsshssfx
 xlkkkkklkkkkkklkkkkklx
 xfsssssfsgssssfsisesfx
 xlkkkkaaaaaaaaaakkkklx
-xsdaaaa..BBBB..aaaassx
-xaaaF............Gaaax
-x..................xxx
-x..................xxx
-x.................ZJY"
-xE.................xxx
-xE........cA........Cx
-xE........cc........Cx
-xE..................Cx
-x...................Cx
-x....................x
-x....................x
+xsdaaaa..BBBB..aaaassxmmmmmmmmmmmm
+xaaaF............Gaaaxmbb123bbbbum
+x..................xxxmbb456brybbm
+x..................xxxmbbbbbbbbbbm
+x.................ZJYbWbbbbbbvbbbm
+xE.................xxxmbbbbbbbbbbm
+xE........cA........Cxmbbbbbbbbbbm
+xE........cc........Cxmbbbbbbbbbbm
+xE..................Cxmbobbbbbbbbm
+x...................Cxmbbbbbbbbbbm
+x....................xmbbbbbbbbbbm
+x....................xmmmbbmmmmmmm
 xaaaH............Iaaax
 xaaaaaa..DDDD..aaaaaax
 xxxxxxxxxxxxxxxxxxxxxx
-ENDMAP
-
-NAME: Barracks_2
-TAGS: barracks_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
-FTILE: . = floor_cobble_blood
-RTILE: x = wall_catacombs
-KITEM: p = potion of heal wounds q:10, potion of haste q:3
-KPROP: . = no_tele_into
-
-MAP
-xxxxxxxxxxxx
-x..........x
-x..p...{...x
-x..........x
-...........x
-x..........x
-x..........x
-x..........x
-x..........x
-x..........x
-x..........x
-xxx..xxxxxxx
 ENDMAP
 
 NAME: Entryway_2
@@ -1173,6 +1847,7 @@ KFEAT: r = .
 FTILE: . = floor_hall
 FTILE: r = floor_rough_blue
 RTILE: x = wall_brick_gray
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xxx++xxx
@@ -1194,7 +1869,7 @@ FTILE: .t = floor_grass
 RTILE: r = wall_orc
 KFEAT: fghjklmopqsDEF = furniture
 KFEAT: AI = civilian
-KFEAT: niuvGH = .
+KFEAT: niuvGHKL = .
 FTILE: n = floor_dirt
 FTILE: i = floor_vines
 TILE: A = arena_guard
@@ -1227,17 +1902,21 @@ SUBVAULT: c : arena_shop_3
 SUBVAULT: d : arena_shop_4
 SUBVAULT: e : arena_inn
 SUBVAULT: C : arena_shop_5
-KITEM: B = gold q:5000
+KFEAT: J = tree
+FTILE: J = floor_grass
+: lua_marker("J", monster_management_marker)
+FTILE: K = graveyard_grass_flowers
+FTILE: L = graveyard_grass_flowers_2
 
 MAP
 ttwwwwtttttttttttttuttttt..ttttt
-tvGwwWWvFDDEvvvvvvvuvv.........r
-tvGwwWvvvvvvvvvvvvvvv...Ann....r
+tvGwwWWvFDDEvKvKKvvuvv.........r
+tvGwwWvKvLvvKvvvLvvvv...Ann....r
 tvGwvaaaaaaaavbbbbbbbbb..nn.....
 t.Gwvaaaaaaaavbbbbbbbbb..nnnnn..
 t.Gwvaaaaaaaavbbbbbbbbb..n......
 tGww.aaaaaaaa.bbbbbbbbb..n.....r
-twww.aaaaaaaa.bbbbbbbbbnnn.B...r
+twww.aaaaaaaa.bbbbbbbbbnnn.....r
 twww.aaaaaaaa.......nnnndddddd.r
 twwwwaaaaaaaa.tjkl.nn...dddddd.r
 ttwwWt.t.......oooiims..dddddd.r
@@ -1251,7 +1930,7 @@ twW.eeeeeeeeef..ccccccc.nCCCCCCt
 tWW.eeeeeeeeegt.ccccccc.nCCCCCCt
 t...eeeeeeeeeq..ccccccc.nCCCCCCt
 t...eeeeeeeee...ccccccctnCCCCCCt
-t...eeeeeeeee...ccccccc.nCCCCCCt
+tJ..eeeeeeeee...ccccccc.nCCCCCCt
 t...eeeeeeeee...tt...t..nCCCCCCt
 t...................t...tCCCCCCt
 tttttttttttttttttttttttttttttttt
@@ -1299,6 +1978,7 @@ KFEAT: D = distillery shop name:Jessica type:Healing suffix:Potions count:17 use
            potion of curing q:4 | potion of curing q:4 | potion of curing q:4 |\
            potion of curing q:4 | potion of curing q:4
 TILE: D = shop_panel_potions
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xxxxxxlx
@@ -1385,23 +2065,31 @@ TILE: j = shelf_book
 FTILE: cdghij = village_tile_1
 FTILE: A = village_tile_1
 FTILE: ef = wall_brick_yellow
-KFEAT: B = book shop name:Gandolf type:Spell suffix:Repository use_all count:18 greed:20 ; \
+KFEAT: B = book shop name:Gandalf type:Spell suffix:Repository use_all count:18 greed:20 ; \
            book of summonings | book of spatial translocations | book of enchantments |\
            book of death | book of the sky | book of the warp |\
            book of the earth | book of burglary | book of annihilations |\
            grand grimoire | necronomicon
 TILE: B = shop_panel_books
-KFEAT: C = weapon shop name:Gandolf type:Must-have suffix:Staves use_all count:9 greed:30 ; \
+KFEAT: C = weapon shop name:Gandalf type:Must-have suffix:Staves use_all count:9 greed:30 ; \
            staff of summoning | staff of wizardry |\
            staff of fire | staff of air | staff of earth | staff of cold |\
            staff of poison | staff of death | staff of conjuration
 TILE: C = shop_panel_staves
+KFEAT: D = armour shop name:Gandalf type:Magic suffix:Apparel use_all count:6 greed:20 ; \
+           not_cursed robe level:2 tile:alchemists_robes_1 wtile:alchemists_coat_with_pants ego:resistance |\
+           not_cursed hat level:3 tile:alchemists_hood_1 wtile:alchemists_hood ego:intelligence |\
+           not_cursed pair of gloves level:2 wtile:alchemists_gloves ego:magic_resistance |\
+           not_cursed robe level:5 tile:alchemists_robes_1 wtile:alchemists_coat_scrolls_with_pants ego:archmagi |\
+           not_cursed ring of flight | not_cursed ring of magical power
+TILE: D = shop_panel_magic_armour
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xx+xefx
 x...ghx
 x..BCdx
-x.Ajicx
+xDAjicx
 x..aabx
 xxxxxxx
 ENDMAP
@@ -1431,6 +2119,7 @@ KFEAT: C = scroll shop name:Jeremy type:Scrolls suffix:Prestige greed:10 use_all
            scroll of amnesia q:5 | scroll of remove curse q:15 | scroll of enchant weapon q:8 |\
            scroll of enchant armour q:4 | scroll of enchant armour q:4
 TILE: C = shop_panel_scrolls
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xxxxbx
@@ -1486,6 +2175,7 @@ KFEAT: E = general shop name:Randolf-the-Trader type:General suffix:Goods use_al
 TILE: E = shop_panel_misc
 KFEAT: F = food shop count:17 name:Gertrude type:Delicious suffix:Food greed:4 ; ration q:2
 TILE: F = shop_panel_food
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xxxx+xxxx
@@ -1541,6 +2231,7 @@ KFEAT: C = armour shop name:Elfearian type:Slick suffix:Garbs use_all count:10 g
            not_cursed cloak ego:invisibility wtile:magenta |\
            not_cursed longbow ego:freezing
 TILE: C = shop_panel_archery
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
 xaxxbx
@@ -1570,22 +2261,20 @@ ENDMAP
 
 NAME: Training_Area_2
 TAGS: training_area_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
-KFEAT: abeS = x
-KFEAT: fmnocpqr = .
+KFEAT: eSz7/ = x
+KFEAT: fmnopqkrRu0*& = .
+KFEAT: l = shopkeeper
 FTILE: . = floor_grey_dirt
-FTILE: f = floor_crypt
 RTILE: x = wall_orc
-RTILE: a = wall_catacombs
-RTILE: b = wall_crypt_metal
 FTILE: m = floor_slime
 FTILE: n = floor_swamp
 FTILE: o = floor_mud
-FTILE: c = floor_rough_red
 FTILE: p = floor_moss
 FTILE: q = floor_woodground
 RTILE: e = wall_vines
 FTILE: r = floor_vines
 KFEAT: s = deep_water
+TILE: s = shoals_deep_water
 KFEAT: g = clear_rock_wall
 TILE: g = dngn_grate
 KFEAT: hi = .
@@ -1593,25 +2282,30 @@ FTILE: h = SHIP_TILE_62
 FTILE: i = floor_pebble_lightgray
 RTILE: S = wall_vines
 FTILE: S = floor_vines
-MONS: storm dragon, black bear hp:10, training dummy hp:5 ; shortbow \
-      not_cursed mundane . arrow q:10, \
+MONS: storm dragon, hound hp:10, training dummy hp:5 ; shortbow \
+      not_cursed mundane . arrow q:20, \
       col:blue goblin name:island_goblin_archer name_replace; shortbow \
-      not_cursed mundane . arrow q:10, \
-      col:blue goblin name:island_goblin_cutthroat name_replace; dagger
-KITEM: V = potion of heal wounds q:5
-KFEAT: ABCDEFGKIJKLMNOPQUVXYZ = .
-FTILE: ABCDEFGHIJKLMNOPQUVXYZ = tutorial_pad
-COLOUR: ABCDEFGHIJKLMNOPQUVXYZ = lightblue
+      not_cursed mundane . arrow q:20, \
+      col:blue goblin name:island_goblin_cutthroat name_replace; \
+      dagger not_cursed mundane
+KITEM: V = potion of heal wounds q:5 ident:all
+KFEAT: ajABCDEFGKIJKLMNOPQUVXZ89?!#< = .
+FTILE: ajABCDEFGIJKLMNOPQUVXZ89?!#< = tutorial_pad
+COLOUR: ajABCDEFGIJKLMNOPQUVXZ89?!#< = lightblue
 KITEM: N = tomahawk q:20 mundane
 KITEM: Q = arrow q:20 mundane
-MARKER: A = lua:tutorial6.msg("death")
+KFEAT: H = ominous_space
+TILE: H = spooky_grass_spawn_point_blue
+FTILE: f = spooky_grass_blue
+FTILE: k = spooky_grass_energy_blue
+FTILE: R = pressure_plate_active
 MARKER: B = lua:tutorial6.msg("options")
-MARKER: C = lua:tutorial6.msg("adventuring_2")
+MARKER: j = lua:tutorial6.msg("adventuring_2")
 MARKER: D = lua:tutorial6.msg("sprinting")
 MARKER: E = lua:tutorial6.msg("opening_doors")
 MARKER: F = lua:tutorial6.msg("closing_doors")
 MARKER: G = lua:tutorial6.msg("examining_enemies_1")
-MARKER: H = lua:tutorial6.msg("examining_enemies_2")
+MARKER: a = lua:tutorial6.msg("examining_enemies_2")
 MARKER: I = lua:tutorial6.msg("leveling_up")
 MARKER: J = lua:tutorial6.msg("skills_1")
 MARKER: K = lua:tutorial6.msg("skills_2")
@@ -1623,83 +2317,236 @@ MARKER: P = lua:tutorial6.msg("ranged_combat_3")
 MARKER: Q = lua:tutorial6.msg("ranged_combat_4")
 MARKER: U = lua:tutorial6.msg("auto_pickup_1")
 MARKER: V = lua:tutorial6.msg("potions_1")
-MARKER: X = lua:tutorial6.msg("potions_2")
+MARKER: X = lua:tutorial6.msg("shops_2")
+MARKER: Z = lua:tutorial6.msg("pressure_plates_1")
+MARKER: 8 = lua:tutorial6.msg("jewelry_3")
+MARKER: 9 = lua:tutorial6.msg("cursed_equipment")
+MARKER: ? = lua:tutorial6.msg("gold")
+MARKER: ! = lua:tutorial6.msg("shops_1")
+MARKER: # = lua:tutorial6.msg("pressure_plates_2")
+MARKER: < = lua:tutorial6.msg("adventuring_3")
 {{
 local raise_bridge_marker = TriggerableFunction:new {
-    func = "hero_mode_raise_bridge",
-    repeated = true,
-    data = {
-        goblins_killed = 0
-    }
+    func = "hero_mode_raise_bridge"
 }
 
 raise_bridge_marker:add_triggerer(DgnTriggerer:new {
-    type = "monster_dies",
-    target = "island goblin archer"
+    type = "player_move"
+})
+
+local blow_up_wall_marker = TriggerableFunction:new {
+    func = "hero_mode_blow_up_wall",
+    data = {
+        active = false,
+        already_pressed = false
+    },
+    repeated = true
+}
+
+blow_up_wall_marker:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
+})
+
+blow_up_wall_marker:add_triggerer(DgnTriggerer:new {
+    type = "turn",
+    delay = 1
+})
+
+local open_wall_marker = TriggerableFunction:new {
+    func = "hero_mode_open_wall",
+    data = {
+        marker = blow_up_wall_marker
+    }
+}
+
+open_wall_marker:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
+})
+
+local set_monster_respawning_marker_3 = TriggerableFunction:new {
+    func = "hero_mode_set_monster_respawning",
+    data = {
+        marker = monster_management_marker
+    },
+    repeated = true
+}
+
+set_monster_respawning_marker_3:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
 })
 
 lua_marker("s", portal_desc {submerged_bridge = 1})
 lua_marker("S", portal_desc {stone_wall = 1})
 lua_marker("R", raise_bridge_marker)
+lua_marker("R", portal_desc {pressure_plate = 3})
+lua_marker("H", set_monster_respawning_marker_3)
+lua_marker("+", portal_desc {door = 1})
+lua_marker("7", portal_desc {stone_wall = 2})
+lua_marker("0", open_wall_marker)
+lua_marker("0", portal_desc {pressure_plate = 5})
+lua_marker("*", blow_up_wall_marker)
+lua_marker("*", portal_desc {pressure_plate = 6})
+lua_marker("/", portal_desc {rock_wall = 1})
+lua_marker("&", portal_desc {ground = 1})
 }}
 FTILE: s = SHIP_TILE_62
 FTILE: 12 = floor_vines
 FTILE: 345 = floor_woodground
-KFEAT: R = tree
-FTILE: R = floor_woodground
 KFEAT: T = tree
 FTILE: T = floor_woodground
 FTILE: t = floor_woodground
 TILE: t = DNGN_TREE_YELLOW
 TILE: T = DNGN_TREE_RED
+TILE: l = shady_merchant
+FTILE: l = floor_woodground
+KFEAT: Y = general shop name:Vlad type:General suffix:Goods use_all count:16 greed:15 ; \
+           not_cursed scale mail mundane | not_cursed chain mail mundane |\
+           not_cursed buckler mundane | not_cursed shield mundane |\
+           not_cursed pair of boots mundane useful | not_cursed scarf ego:repulsion |\
+           not_cursed scarf ego:spirit_shield | not_cursed dagger mundane |\
+           not_cursed rapier mundane | not_cursed war axe mundane |\
+           not_cursed battleaxe mundane | not_cursed great sword ego:flaming |\
+           not_cursed spear mundane | not_cursed glaive ego:freezing |\
+           not_cursed shield ego:reflection | not_cursed ring of slaying
+TILE: Y = shop_panel_misc_2
+KITEM: 6 = not_cursed shortbow mundane
+FTILE: 6 = floor_vines
+FTILE: u = graveyard_grass
+RTILE: z = dngn_open_sea
+TILE: w = shoals_deep_water
+TILE: W = shoals_shallow_water
+KITEM: 8 = scroll of remove curse
+FTILE: 0 = pressure_plate_active
+RTILE: 7 = wall_vines
+FTILE: 7 = floor_vines
+KITEM: $ = gold q:20
+FTILE: $ = floor_vines
+FTILE: * = pressure_plate_active
+FTILE: & = floor_moss
+RTILE: & = wall_orc
+RTILE: / = wall_orc
+FTILE: / = floor_orc
+SUBVAULT: C : hero_mode_cathedral
+SUBVAULT: A : hero_mode_dark_fortress
 
 MAP
-xxxxxxxxxxxxxxxqqexxqx
-xqqrNrqOqWwwWq3qqeqqqx
-xqMrerrqqWwwWq3qqeqqqx
-xqLrerQqqqWwwWtqqeeqqx
-xqKree3rqqqWwwweSeeqqx
-xrJIreerrqqssssqq4eqqx
-xrrrrrerPqqWwwWq4qeqqx
-x+geg+eRrqqqWwwW5qeqqx
-x1rer2eeeeeeeWwwWWwhwx
-xrrerrerrqqqqWWwwwwiwx
-x+geg+errqqqqqqWWWwhwx
-xqqqrreerrrrqqqqqWWhWx
-xTrHGrrerrrrrrrrrrrrrx
-xeeerrFerrreeeeeeeeeex
-xqqeee+eeeeeqqqqqqqqqx
-pqqoqqqqqqqqqqqqqqqqqx
-xppoppEppppppqqqqqqqqx
-xppooooooooopppqqqqqqx
-xppoXppaaa++aaaqqqqqqx
-xppoppaaffffffaaqqqqqx
-xppoVaaffffffffaaaaaax
-xppopaffbbffbbffffffax
-xppUpaffbffffbfccccfax
-xppopaffbfccfbfccccfax
-xppopaffbfccfbfccccfax
-xppopaffbffffbfccccfax
-xppCpaffbbffbbffffffax
-xppopaaffffffffaaaaaax
-xppoppaaffffffaapppppx
-xppopppaaa++aaappp...x
-xppoooooooooppppp....x
-x..popppppppp........x
-....o..xxxxxxxxxxxxxxx
-....B..x
+xxxxxxxxxxxxxxxqqeAAAAAAAAz
+xqqrNrqOqWwwWq3qqeAAAAAAAAz
+xqMrerrqqWwwWq3qqeAAAAAAAAz
+xqLrerQqqqWwwWtqqeAAAAAAAAz
+xqKree6rqqqWwwweSeeAAAAAAAz
+xrJIreerrqqssssqq4eAAAAAAAz
+xrrrrrerPqZWwwWq4qeAAAAAAAz
+x+geg+etrqRqWwwW5qeAAAAAAAz
+x1rer2eeeeeeewwwWWwwhwwwwwz
+xrrerre$$$<qqWWwwwwwiwwwwwz
+x+geg+e$$rrqqqqwwwwwhwwwwwz
+xqqqrreer?r98qqwwwwwhwwwwwz
+xTraGrrerrrrrrrrrrrrrwwwwwz
+xeeerrFe0rreeeeee7eeeewwwwz
+xqqeee+eeeeeq!qqqqqqqqwwwwz
+/qq&qqqqqlqqqqqquuuuuqwwwwz
+/ppp&pEppYqqqqquffffuwwwwwz
+/p&oooooooooppqufkHfuwwwwwz
+xppoXCCCCCCCCCCCCCCCCwwwwwz
+xp*opCCCCCCCCCCCCCCCCwwwwwz
+xp#oVCCCCCCCCCCCCCCCCwwwwwz
+xppopCCCCCCCCCCCCCCCC..wwwz
+xppUpCCCCCCCCCCCCCCCC...wwz
+xppopCCCCCCCCCCCCCCCC....wz
+xppopCCCCCCCCCCCCCCCC....wz
+xppopCCCCCCCCCCCCCCCC....wz
+xppjpCCCCCCCCCCCCCCCC..wwwz
+xppopCCCCCCCCCCCCCCCCwwwwwz
+xppopCCCCCCCCCCCCCCCCwwwwwz
+xppopCCCCCCCCCCCCCCCC.wwwwz
+xppoooooooooppppp......wwwz
+x..popppppppp..........wwwz
+...Do..xxxxxxxxxxxxxxxwwwwz
 ....o..x
-x..Do..x
-x...A..x
+....o..x
+x...B..x
+x...o..x
 xxxx..xx
+ENDMAP
+
+NAME: Hero_Mode_Cathedral
+TAGS: hero_mode_cathedral no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+KFEAT: fcpqdeg = .
+KFEAT: ab = x
+FTILE: . = floor_grey_dirt
+RTILE: a = wall_catacombs
+RTILE: b = wall_crypt_metal
+FTILE: q = floor_woodground
+FTILE: c = floor_rough_red
+FTILE: p = floor_moss
+FTILE: f = floor_crypt
+RTILE: x = wall_orc
+FTILE: d = spooky_grass_blue
+FTILE: e = spooky_grass_energy_2_blue
+FTILE: g = graveyard_grass
+: lua_marker("+", portal_desc {door = 1})
+
+MAP
+ppaaa++aaaggdedg
+paaffffffaaggggg
+aaffffffffaaaaaa
+affbbffbbffffffa
+affbffffbfccccfa
+affbfccfbfccccf+
+affbfccfbfccccf+
+affbffffbfccccfa
+affbbffbbffffffa
+aaffffffffaaaaaa
+paaffffffaappppp
+ppaaa++aaappp...
+ENDMAP
+
+NAME: Hero_Mode_Dark_Fortress
+TAGS: hero_mode_dark_fortress no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror
+RTILE: x = dngn_stone_dark
+FTILE: . = cottage_floor
+KFEAT: AB = .
+FTILE: AB = tutorial_pad
+MARKER: A = lua:tutorial6.msg("jewelry_1")
+MARKER: B = lua:tutorial6.msg("jewelry_2")
+KITEM: A = amulet of inaccuracy mundane cursed
+: lua_marker("+", portal_desc {door = 1})
+
+MAP
+x......x
+x.xxxxxx
+x.+....x
+xxx..A.x
+ x.....x
+ x.....x
+ xB....x
+ x+xxxxx
 ENDMAP
 
 NAME: Oasis_2
 TAGS: oasis_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: ab = G
+KFEAT: cABCD = .
 FTILE: . = floor_moss
 RTILE: x = wall_orc
 TILE: t = DNGN_MANGROVE
 FTILE: t = floor_moss
+TILE: a = dngn_gravestone
+TILE: b = dngn_gravestone_ornate
+FTILE: a = floor_moss
+FTILE: b = floor_moss
+FTILE: c = floor_vines
+FTILE: ABC = tutorial_pad
+MARKER: A = lua:tutorial6.msg("adventuring_4")
+MARKER: B = lua:tutorial6.msg("necromancy_2")
+MARKER: C = lua:tutorial6.msg("necromancy_3")
+KITEM: C = randbook numspells:1 spells:animate_skeleton title:Dark_Arts_101 owner:Vlad
+KITEM: d = scroll of amnesia ident:type
+KITEM: e = never_decay bat skeleton / never_decay goblin; nothing skeleton
+KITEM: f = never_decay ball python skeleton / never_decay jackal skeleton
+KITEM: g = never_decay ogre; nothing skeleton
+FTILE: defg = floor_vines
 
 MAP
 xxxxxx.xxxx
@@ -1708,36 +2555,86 @@ xt.......tx
 xt.WWWWW.tx
 xt.WwwwW.tx
 xt.WwwwW..x
-xt.WWWWW..x
-xt.........
-xt........x
-xt........x
-xt........x
-xt........x
-x.........x
-x.........x
+xt.WWWWWx..
+xt.....A...
+x..t....x.x
+x.....c...x
+x.a.b.Ba.tx
+xccdC.fefex
+xga.a.ea.cx
+xgc.cef.ffx
 xxxxxxxxxxx
 ENDMAP
 
 NAME: Cave_2
 TAGS: cave_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: amABCDE = .
+KFEAT: bcde = x
+KFEAT: fghijkl = furniture
+FTILE: . = floor_pebble_brown
+RTILE: x = wall_pebble_brown
+FTILE: a = cottage_floor
+RTILE: b = cottage_wall
+RTILE: c = cottage_wall_cracked
+RTILE: d = cottage_wall_cracked_2
+RTILE: e = cottage_wall_torch
+TILE: f = table_cards
+TILE: g = chair_1
+TILE: h = chair_2
+TILE: i = chair_4
+TILE: j = chair_3
+FTILE: ghi = floor_pebble_brown
+FTILE: + = floor_pebble_brown
+TILE: k = table_food
+TILE: l = worn_bed_bottom
+FTILE: m = cottage_floor_worn_bed_top
+FTILE: jkl = cottage_floor
+MONS: sigmund hp:100, dowan, duvessa, terence
+FTILE: 1 = cottage_floor
+FTILE: 234 = floor_pebble_brown
+KITEM: F = potion of heal wounds q:5 ident:all no_pickup
+FTILE: F = floor_pebble_brown
+KITEM: G = never_decay goblin; nothing skeleton
+KITEM: H = never_decay bat skeleton
+FTILE: GH = floor_pebble_brown
+FTILE: ABCDE = tutorial_pad
+MARKER: A = lua:tutorial6.msg("necromancy_4")
+MARKER: B = lua:tutorial6.msg("necromancy_5")
+MARKER: C = lua:tutorial6.msg("necromancy_6")
+MARKER: D = lua:tutorial6.msg("necromancy_7")
+MARKER: E = lua:tutorial6.msg("conclusion")
+: lua_marker("+", portal_desc {door = 1})
 
 MAP
-xxxxxxxxxxx
-x.........x
-x.........x
-x.........x
-x.........x
-x.........x
-x.........x
-xxxxxx.xxxx
+xxxxxxxxxxxxxxx
+xaaaa...wwwwxxx
+xmaaaaE..wwwxxx
+xla1aaa...xxxxx
+xaaaaaa...b.xxx
+xkjaaaaaaab..xx
+xaaaaaaaaa+..Gx
+xxbbbcdbbbb..Hx
+xxF.GG.H.D...xx
+xxx.4.g..3..xxx
+xxx..hf.2...xxx
+xx.G..i......xx
+xxxxxxxxx.....xxxxx
+        x.......xxx
+        xbdb+bbcbbx
+        x...C.....x
+        xxx......xx
+        xxxxx.B.xxx
+        xxxxx.A.xxx
+        xxxxxx.xxxx
 ENDMAP
 
 NAME: Rocky_Shore_2
 TAGS: rocky_shore_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
-KFEAT: sbp = .
+KFEAT: sbpef = .
 KFEAT: rd = x
 KFEAT: a = shallow_water
+KFEAT: H = ominous_space
+TILE: H = spooky_grass_spawn_point_blue
 FTILE: b = halo_dirt
 FTILE: s = floor_sand
 FTILE: . = floor_pebble_lightgray
@@ -1747,8 +2644,70 @@ TILE: a = shoals_shallow_water
 RTILE: x = wall_orc
 RTILE: r = wall_shoals
 TILE: d = dngn_open_sea
-KMONS: u = bush
+KMONS: c = bush
 FTILE: P = floor_pebble_lightgray
+FTILE: c = halo_dirt
+KFEAT: BCDEFG = .
+FTILE: BCDEFG = tutorial_pad
+COLOUR: BCDEFG = lightblue
+MARKER: B = lua:tutorial6.msg("viewing_messages")
+MARKER: C = lua:tutorial6.msg("diagonal_movement")
+MARKER: D = lua:tutorial6.msg("water")
+MARKER: E = lua:tutorial6.msg("combat_2")
+MARKER: F = lua:tutorial6.msg("food")
+MARKER: G = lua:tutorial6.msg("respawning")
+KMONS: 1 = rat always_corpse
+FTILE: 1 = halo_dirt
+FTILE: e = ship_tile_62
+FTILE: f = spooky_grass_blue
+
+{{
+local set_monster_respawning_marker_2 = TriggerableFunction:new {
+    func = "hero_mode_set_monster_respawning",
+    data = {
+        marker = monster_management_marker
+    },
+    repeated = true
+}
+
+set_monster_respawning_marker_2:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
+})
+
+lua_marker("H", set_monster_respawning_marker_2)
+}}
+SUBVAULT: A : hero_mode_boat
+
+MAP
+                           AAAAAAAAAAAAAAwwwwd
+                           AAAAAAAAAAAAAAwwwwd
+                           AAAAAAAAAAAAAAwwwwd
+                           AAAAAAAAAAAAAAwwwwd
+                           AAAAAAAAAAAAAAwwwwd
+rrrrrrrrrxxxxxxxxxxxxxx..xxAAAAAAAAAAAAAAwwwwd
+r..........................AAAAAAAAAAAAAAwwwwd
+r.................wwwwwwwwwAAAAAAAAAAAAAAwwwwd
+r.....wwwwwwwwwwwwwwwwwwwwwAAAAAAAAAAAAAAwwwwd
+r....wwwwwwwwwwwwwwwwwwwwwwAAAAAAAAAAAAAAwwwwd
+r..rrrrwwwwwwwwwwwww....wwwAAAAAAAAAAAAAAwwwwd
+rrr....aaaaawwwww..bcbbb.eeAAAAAAAAAAAAAAwwwwd
+r..C.bbbsssswwwwww.1bbbb.wwAAAAAAAAAAAAAAwwwwd
+r..bbbcbbssseaDeeF.b1Eb..wwAAAAAAAAAAAAAAwwwwd
+r.bbbbbbssssaawww.b1bcb.wwwAAAAAAAAAAAAAAwwwwd
+r.bGbcbsssaaawwwww.B...wwwwAAAAAAAAAAAAAAwwwwd
+rbbHbbbssaawwwwwwwww..wwwwwAAAAAAAAAAAAAAwwwwd
+dsssssssawwwwwwwwwwwwwwwwwwAAAAAAAAAAAAAAwwwwd
+daaaaaawwwwwwwwwwwwwwwwwwwwAAAAAAAAAAAAAAwwwwd
+dwwwwwwwwwwwwwwwwwwwwwwwwwwAAAAAAAAAAAAAAwwwwd
+dddddddddddddddddddddddddddAAAAAAAAAAAAAAddddd
+ENDMAP
+
+NAME: Hero_Mode_Boat
+TAGS: hero_mode_boat no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
+KFEAT: d = x
+RTILE: x = wall_orc
+TILE: w = shoals_deep_water
+TILE: d = dngn_open_sea
 # For boat building
 KFEAT: ABCDEFGHIJKLMNOPQRSTUVWXYZ = furniture
 KFEAT: 12345 = .
@@ -1803,7 +2762,6 @@ TILE: 9 = SHIP_TILE_57
 FTILE: 6789R = SHIP_TILE_62
 FTILE: EDCGFBYZghklmnqtT = shoals_deep_water
 TILE: 0 = SHIP_TILE_66
-FTILE: u = halo_dirt
 KFEAT: vy = .
 KFEAT: z! = furniture
 FTILE: v = SHIP_TILE_32
@@ -1811,38 +2769,21 @@ FTILE: y = SHIP_TILE_36
 TILE: z = SHIP_TILE_55
 TILE: ! = SHIP_TILE_56
 FTILE: z! = shoals_deep_water
-KFEAT: )[]<>$%^ = .
-FTILE: )[]<>$%^ = tutorial_pad
-COLOUR: )[]<>/$%^ = lightblue
-MARKER: { = lua:tutorial6.msg("movement")
-MARKER: ) = lua:tutorial6.msg("viewing_messages")
-MARKER: [ = lua:tutorial6.msg("diagonal_movement")
-MARKER: ] = lua:tutorial6.msg("water")
-MARKER: < = lua:tutorial6.msg("weapons")
-MARKER: $ = lua:tutorial6.msg("combat_1")
-MARKER: % = lua:tutorial6.msg("combat_2")
-MARKER: ^ = lua:tutorial6.msg("food")
-KMONS: & = rat name:beach_rat name_replace always_corpse
-FTILE: & = halo_dirt
-KITEM: ( = long sword not_cursed mundane
+KFEAT: abef( = .
+FTILE: abef( = tutorial_pad
+COLOUR: abef( = lightblue
+KITEM: b = long sword not_cursed mundane
 KITEM: / = ring mail not_cursed mundane
-FTILE: ( = tutorial_pad
 FTILE: / = SHIP_TILE_62
-KITEM: # = pair of boots mundane not_cursed useful
-FTILE: # = SHIP_TILE_62
+KITEM: c = pair of boots mundane not_cursed useful
+FTILE: c = SHIP_TILE_62
+MARKER: { = lua:tutorial6.msg("movement")
+MARKER: e = lua:tutorial6.msg("weapons")
+MARKER: a = lua:tutorial6.msg("combat_1")
+MARKER: b = lua:tutorial6.msg("picking_up_items")
+MARKER: f = lua:tutorial6.msg("equipping_items")
+MARKER: ( = lua:tutorial6.msg("armour")
 {{
-local rat_death_marker = TriggerableFunction:new {
-    func = "hero_mode_rat_death",
-    repeated = true,
-    data = {
-        num_killed = 0
-    }
-}
-
-local sword_move_marker = TriggerableFunction:new {
-    func = "hero_mode_sword_move",
-    repeated = true
-}
 
 local armour_pickup_marker = TriggerableFunction:new {
     func = "hero_mode_armour_pickup"
@@ -1851,15 +2792,6 @@ local armour_pickup_marker = TriggerableFunction:new {
 local boots_pickup_marker = TriggerableFunction:new {
     func = "hero_mode_boots_pickup"
 }
-
-rat_death_marker:add_triggerer(DgnTriggerer:new {
-    type = "monster_dies",
-    target = "beach rat"
-})
-
-sword_move_marker:add_triggerer(DgnTriggerer:new {
-    type = "player_move"
-})
 
 armour_pickup_marker:add_triggerer(DgnTriggerer:new {
     type = "item_pickup",
@@ -1871,79 +2803,72 @@ boots_pickup_marker:add_triggerer(DgnTriggerer:new {
     target = "pair of boots"
 })
 
-lua_marker("*", rat_death_marker)
-lua_marker("(", sword_move_marker)
 lua_marker("/", armour_pickup_marker)
-lua_marker("#", boots_pickup_marker)
+lua_marker("c", boots_pickup_marker)
 
-introduction_1 = "<yellow>As you rest in the cabin of your ship, you feel the ship steadily come to "
-                .. "a halt. 'Land ho! Land ho!' You hear from the deck just outside of your "
-                .. "cabin. It seems that the merchant ship you hired came through on its "
-                .. "promise to deliver you to the country of</yellow> <green>Grim Haven</green><yellow>, a land ripe with "
-                .. "monsters and ruined villages.</yellow>"
+--introduction_1 = "<yellow>As you rest in the cabin of your ship, you feel the ship steadily come to "
+--                .. "a halt. 'Land ho! Land ho!' You hear from the deck just outside of your "
+--                .. "cabin. It seems that the merchant ship you hired came through on its "
+--                .. "promise to deliver you to the country of</yellow> <green>Grim Haven</green><yellow>, a land ripe with "
+--                .. "monsters and ruined villages.</yellow>"
+--
+--introduction_2 = "<yellow>There is, however, one attraction that brings adventurers and civilians "
+--                .. "alike to this desolate land:</yellow> <brown>The Arena</brown><yellow>. "
+--                .. "The Arena is a proving ground filled with the dangerous monsters that "
+--                .. "foolhardy merchants have gathered from the continent in order to provide "
+--                .. "a spectacle for those who have scarcely witnessed monsters before.</yellow>"
+--
+--introduction_3 = "<yellow>Although it has this less than glorifying reputation, it has still served as a "
+--                .. "gathering place for legendary heroes who wish to show their mettle.</yellow>"
+--
+--introduction_4 = "<yellow>Reputation gains are hardly important to you, but the opportunity to "
+--                .. "face challenging monsters sets your blood on fire in a way that nothing "
+--                .. "else can. And if you rid the world of a few of those savage beasts in the "
+--                .. "process, all the better.</yellow>"
 
-introduction_2 = "<yellow>There is, however, one attraction that brings adventurers and civilians "
-                .. "alike to this desolate land:</yellow> <brown>The Arena</brown><yellow>. "
-                .. "The Arena is a proving ground filled with the dangerous monsters that "
-                .. "foolhardy merchants have gathered from the continent in order to provide "
-                .. "a spectacle for those who have scarcely witnessed monsters before.</yellow>"
+--introduction_5 = "<yellow>You have journeyed to this land to enter into the "
+--                .. "arena and spill some blood. \n Good luck!</yellow>"
 
-introduction_3 = "<yellow>Although it has this less than glorifying reputation, it has still served as a "
-                .. "gathering place for legendary heroes who wish to show their mettle.</yellow>"
-
-introduction_4 = "<yellow>Reputation gains are hardly important to you, but the opportunity to "
-                .. "face challenging monsters sets your blood on fire in a way that nothing "
-                .. "else can. And if you rid the world of a few of those savage beasts in the "
-                .. "process, all the better.</yellow>"
-
-introduction_5 = "<yellow>You have journeyed to this land to enter into the "
-                .. "arena and spill some blood. \n Good luck!</yellow>"
-crawl.more()
+introduction_1 = "<magenta>Hi! Welcome to the Hero Mode mod of DCSS. Your goal will be "
+                 .. "to make your way to the arena, and to become the arena champion. Should "
+                 .. "you accept this challenge, then press 'enter' (In general, when you see "
+                 .. "</magenta> <cyan>--more--</cyan> <magenta>, press enter to continue).</magenta>"
+introduction_2 = "<magenta>Good luck!</magenta>"
 crawl.mpr(introduction_1)
 crawl.more()
 crawl.mpr(introduction_2)
 crawl.more()
-crawl.mpr(introduction_3)
-crawl.more()
-crawl.mpr(introduction_4)
-crawl.more()
-crawl.mpr(introduction_5)
-crawl.more()
 }}
-KFEAT: * = .
-FTILE: * = floor_sand
-KFEAT: ? = shallow_water
-TILE: ? = shoals_shallow_water
 
 MAP
-                           xxxxxxxxxxxxxx
-                           xwwwwwzT!wwwwd
-                           xwwwwmq5tnwwwd
-                           xwwwwkv1ylwwwd
-                           xwwwgi111jhwwd
-rrrrrrrrrxxxxxxxxxxxxxx..xxxwwwY3#114Zwwd
-r..........................wwwwW11911Xwwd
-r.................wwwwwwwwwwwwwW11811Xwwd
-r.)...wwwwwwwwwwwwwwwwwwwwwwwwwW1/711Xwwd
-r....wwwwwwwwwwwwwwwwwwwwwwwwwwW1(611Xwwd
-r..rrrrwwwwwwwwwwwww....wwwwwwwW10001Xwwd
-rrr....aaaaawwwww..bubbb.11$11111MRO1Xwwd
-r..[.bbbsssswwwwww.&bbbb.wwwwwwW<M1O1Xwwd
-r..b&bubbsss1???1].b&%b..wwwwwwN1S2V1Pwwd
-r&..bbb&ssssaawww.b&bub.wwwwwwwM1Q2U1Owwd
-r.bbbubsssaaawwwww.....wwwwwwwwJ11111Kwwd
-rsss*sssaaawwwwwwwww..wwwwwwwwwHLLLLLIwwd
-daaaaaaaawwwwwwwwwwwwwwwwwwwwwwCAAAAABwwd
-dwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwDoooooFwwd
-dwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwEoooooGwwd
-ddddddddddddddddddddddddddddddddddddddddd
+xxxxxxxxxxxxxx
+xwwwwwzT!wwwww
+xwwwwmq5tnwwww
+xwwwwkv1ylwwww
+xwwwgi111jhwww
+xwwwY3c114Zwww
+wwwwW1/911Xwww
+wwwwW1(811Xwww
+wwwwW1f711Xwww
+wwwwW1b611Xwww
+wwwwW10001Xwww
+a11111MRO1Xwww
+wwwwWeM1O1Xwww
+wwwwN1S2V1Pwww
+wwwwM{Q2U1Owww
+wwwwJ11111Kwww
+wwwwHLLLLLIwww
+wwwwCAAAAABwww
+wwwwDoooooFwww
+wwwwEoooooGwww
+dddddddddddddd
 ENDMAP
 
 NAME: Frozen_lands_2
 TAGS: frozen_lands_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
 TILE: t = DNGN_TREE_DEAD
-KFEAT: abckl = .
-KFEAT: fghijJ = x
+KFEAT: abcklKs! = .
+KFEAT: fghijJz? = x
 FTILE: . = floor_woodground
 FTILE: a = floor_ice
 FTILE: b = floor_frozen
@@ -1953,8 +2878,7 @@ TILE: e = dngn_tree_yellow
 RTILE: x = wall_pebble_white
 FTILE: t = floor_ice
 FTILE: c = floor_pebble_white
-RTILE: f = wall_ice
-RTILE: g = wall_icy_stone
+RTILE: g = wall_ice
 RTILE: h = wall_ice_block
 RTILE: i = wall_brick_dark_6
 RTILE: j = wall_brick_dark_6_torch
@@ -1963,72 +2887,122 @@ FTILE: l = SHIP_TILE_62
 KITEM: B = scroll of fog q:1
 KITEM: D = scroll of fear q:1
 KITEM: F = scimitar ego:venom not_cursed no_pickup
-KMONS: m = col:green goblin name:goblin_ambusher name_replace ; long sword
-KMONS: n = col:green goblin ; long sword
+KMONS: m = hobgoblin name:hobgoblin_ambusher name_replace ; \
+           long sword not_cursed mundane
+KMONS: n = hobgoblin ; long sword not_cursed mundane
 FTILE: m = floor_ice
 FTILE: n = floor_ice
 RTILE: J = wall_ice_block
 FTILE: J = SHIP_TILE_62
-KFEAT: K = tree
-TILE: K = dngn_tree_dead
-KITEM: o = long sword mundane not_cursed, ring mail mundane not_cursed
+FTILE: K = pressure_plate_active
 KITEM: p = potion of heal wounds q:3 no_pickup
-KFEAT: ABCDEFGHILMNOPQRS = .
-FTILE: ABCDEFGHILMNOPQRS = tutorial_pad
-COLOUR: ABCDEFGHILMNOPQRS = lightblue
+KFEAT: ABCDEFGHILMOPQRSTUVXYZ56 = .
+FTILE: ABCDEFGHILMOPQRSTUVXYZ56 = tutorial_pad
+COLOUR: ABCDEFGHILMOPQRSTUVXYZ56 = lightblue
 MARKER: B = lua:tutorial6.msg("identification")
-MARKER: C = lua:tutorial6.msg("help")
+MARKER: C = lua:tutorial6.msg("magic_pointers_3")
 MARKER: D = lua:tutorial6.msg("auto_pickup_2")
 MARKER: E = lua:tutorial6.msg("enchanted_items")
 MARKER: F = lua:tutorial6.msg("examining_items")
 MARKER: G = lua:tutorial6.msg("poisoned_weapons")
 MARKER: H = lua:tutorial6.msg("waiting")
 MARKER: I = lua:tutorial6.msg("tactics")
+MARKER: M = lua:tutorial6.msg("artifacts")
+MARKER: N = lua:tutorial6.msg("wands")
+MARKER: O = lua:tutorial6.msg("intro_to_magic")
+MARKER: P = lua:tutorial6.msg("memorisation_1")
+MARKER: Q = lua:tutorial6.msg("memorisation_2")
+MARKER: R = lua:tutorial6.msg("magic_pointers_1")
+MARKER: S = lua:tutorial6.msg("magic_pointers_2")
+MARKER: T = lua:tutorial6.msg("casting_spells")
+MARKER: U = lua:tutorial6.msg("regaining_mana")
+MARKER: V = lua:tutorial6.msg("miscasting_spells")
+MARKER: X = lua:tutorial6.msg("staves")
+MARKER: Y = lua:tutorial6.msg("spells_and_hunger")
+MARKER: Z = lua:tutorial6.msg("jewelry_4")
+MARKER: 5 = lua:tutorial6.msg("strategy_1")
+MARKER: 6 = lua:tutorial6.msg("resting_reminder")
 {{
 local melt_ice_marker = TriggerableFunction:new {
-    func = "hero_mode_melt_ice",
-    repeated = true,
-    data = {
-        goblins_killed = 0
-    }
+    func = "hero_mode_melt_ice"
 }
 
 melt_ice_marker:add_triggerer(DgnTriggerer:new {
-    type = "monster_dies",
-    target = "goblin ambusher"
+    type = "player_move"
 })
 
-lua_marker("J", portal_desc{ice_block = 1})
 lua_marker("K", melt_ice_marker)
+lua_marker("K", portal_desc {pressure_plate = 4})
+lua_marker("J", portal_desc {ice_block = 1})
+lua_marker("+", portal_desc {door = 1})
 }}
+MONS: kobold ; chain mail . war axe not_cursed mundane, \
+      big kobold ; chain mail . battleaxe not_cursed mundane, \
+      centaur hp:10 hd:2
+FTILE: 12 = floor_grey_dirt_b
+KITEM: L = potion of heal wounds no_pickup q:5 ident:all
+FTILE: L = floor_ice
+KITEM: M = ratskin_cloak no_pickup
+FTILE: M = tutorial_pad
+KITEM: N = wand of acid charges:5 ident:all no_pickup
+FTILE: N = tutorial_pad
+KITEM: P = randbook numspells:2 disc:fire disc2:ice owner:Roxanne \
+           title:Treatise_on_Flame spells:flame_tongue&throw_flame
+KFEAT: qr789 = furniture
+TILE: q = barrel_1
+TILE: r = barrel_2
+FTILE: q = wall_ice
+FTILE: s = cottage_floor
+FTILE: r = cottage_floor
+KMONS: u = kobold
+KMONS: v = big kobold
+KMONS: y = kobold
+FTILE: uv = cottage_floor
+FTILE: y = floor_frozen
+RTILE: z = dngn_open_sea
+KITEM: X = staff of wizardry not_cursed
+KITEM: Z = ring of magical power not_cursed no_pickup
+FTILE: + = floor_grey_dirt_b
+RTILE: f = dngn_stone_dark
+RTILE: ? = wall_stone_black_marked
+FTILE: 3 = floor_frozen
+FTILE: ! = floor_rough_red
+KMONS: 4 = kobold demonologist
+FTILE: 4 = cottage_floor
+TILE: 7 = table_pizza
+TILE: 8 = chair_3
+TILE: 9 = chair_4
+FTILE: 897 = cottage_floor
+KITEM: 0 = ration q:2 tile:food_pizza
+FTILE: 0 = cottage_floor
+
 
 MAP
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xiiijiijiijiaaaxaaaaaaaaaaaaaax
-xikkkkkkkkaaaaaxaaaaaaaaaaaaaax
-xikkkkkkkkkaaaagaaaaaaaaaaaaaax
-xikkkkkkkkkkigbgbbbaaaaaaaaaaax
-xikkkkkkkkkkigbggbgggggaaaaaaax
-xiiiiii+iiiiigbbgbbbbbgggaaaaax
-xaaaaaaGaaawwggbgbbbbbbbgaaaaax
-xaaawwlwwwwwwwgbgbbbbbbbgaaaaax
-xwwwwwlwbwwwwwgbbbbbbbbggaaaaax
-xwnnaaaiiiwwwwggggggggggaaaaaax
-xwnnaaakkiwwwwbaDaaaaxaaaaaaaax
-xwaaEaakk+IJlbaattttCxaaaaaaaax
-xwwaFaaakiwwbaHataB..x........x
-xwwwwwwwwwwwbKamto...x........x
-xxxxxxxxxxxxxxxxxxx..xxx.xxxxxx
+iiiijiijiijiggggzzzzzzzzzzzzzzz
+ikkkkkkkk2kOaPbgwwwwhwwwwwhhwwz
+ikiijiijikaabbbgaataaaawwwwwwwz
+ikkkN1kkiikaaQbgtaaaataatkkkawz
+iMkk12k1kijiigRgbbbVaaaaakXkawz
+ikkkkkkkkkkkigSggbggqqgaakkkawz
+iiiiiii+iiiiigbbgbssrrgggaa5awz
+xaaaaaaGaaawwggCgysuvw3bgff+ffx
+xaaawwlwwwwwwwgTgbbswwbbgfs!sfx
+xwwwwwlwbwwwwwgbbbUbwwbggfs!sfx
+xwnnaaaiiiwwwwgggggggggggfs!sfx
+xwnnaaakkiwwwwbaDaaaaxgggfs!sfx
+xwLaEaakk+IJlbaatttt6xgggfZ!4fx
+xwwaFaaakiwwbaHataB..xfffff+ffx
+xwwwwwwwwwwwbKamt....xf0s78Ysfx
+xxxxxxxxxxxxxxxxxxx..xfss9ss0fx
 ENDMAP
 
 NAME: Graveyard_2
 TAGS: graveyard_2 no_item_gen no_trap_gen no_rotate no_hmirror no_vmirror no_pool_fixup
-KFEAT: abcdefghijklqsuvyzHIJKLMNOPQRSTUVWXYZ = .
-KFEAT: mnopy = x
+KFEAT: abcdefghijklqsuvyzHIJKLMNOPQVWXYZ = .
+KFEAT: mnopyRSTU = x
 KFEAT: rBC = furniture
 KFEAT: EF = G
 KFEAT: A = civilian
-KFEAT: D = ominous_space
 FTILE: . = graveyard_grass
 FTILE: t = graveyard_grass
 RTILE: y = graveyard_gate_wall_bottom
@@ -2062,7 +3036,6 @@ FTILE: k = cottage_floor_cracked
 FTILE: l = cottage_floor_cracked_2
 TILE: C = cottage_wall_window
 FTILE: C = cottage_floor
-TILE: D = spooky_grass_spawn_point_blue
 FTILE: q = spooky_grass_energy_blue
 FTILE: s = spooky_grass_energy_2_blue
 FTILE: u = spooky_grass_energy_3_blue
@@ -2083,13 +3056,30 @@ TILE: A = gravekeeper
 FTILE: A = cottage_floor
 FTILE: V = spooky_grass_whisps_blue
 FTILE: W = spooky_grass_whisps_2_blue
+FTILE: X = pressure_plate_active
+{{
+local open_gate_marker = TriggerableFunction:new {
+    func = "hero_mode_open_gate"
+}
+
+open_gate_marker:add_triggerer(DgnTriggerer:new {
+    type = "player_move"
+})
+
+lua_marker("X", open_gate_marker)
+lua_marker("X", portal_desc {pressure_plate = 2})
+lua_marker("R", portal_desc {gate_part = 1})
+lua_marker("S", portal_desc {gate_part = 1})
+lua_marker("T", portal_desc {gate_part = 1})
+lua_marker("U", portal_desc {gate_part = 1})
+}}
 
 MAP
-mmmmommmfbbbc.EE...E.t
-miOPQklmVbubc....aa..t
-mBMHLAhmqDgbc.trrTUrrt
-mhJIKhhpbsbbc.tyyRSyyt
-mhkhhhjmWfed..tEEaaaEt
-mnCm+nCmbbcFE.tEE..aEt
+mmmmommmfffbc.EE...EXt
+miOPQklmbuVbc....aa..t
+mBMHLAhmqbgbc.trrTUrrt
+mhJIKhhpfsfbc.tyyRSyyt
+mhkhhhjmbWed..tEEaaaEt
+mnCm+nCmfbcFE.tEE..aEt
 twwwhhhhvvd...tttttatt
 ENDMAP

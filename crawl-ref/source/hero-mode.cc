@@ -4,17 +4,17 @@
 
 #include "religion.h"
 
-int hero_mode_modify_exp(int exp)
+int hero_mode_modify_exp_1(int exp)
 {
     return exp * HERO_MODE_MULTIPLIER;
 }
 
-int hero_mode_modify_exp_inverse(int exp)
+int hero_mode_modify_exp_inverse_1(int exp)
 {
     return div_rand_round(exp, HERO_MODE_MULTIPLIER);
 }
 
-int hero_mode_modify_piety(int piety)
+int hero_mode_modify_piety_1(int piety)
 {
     // usk is tactical, oka gives bonus piety for scary monsters (all of them)
     if (you_worship(GOD_OKAWARU) || you_worship(GOD_USKAYAW))
