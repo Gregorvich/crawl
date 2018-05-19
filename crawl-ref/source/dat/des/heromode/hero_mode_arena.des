@@ -3,8 +3,8 @@
 -- Arena functions. Many, many functions, including ones that will spawn
 -- enemies, run the countdown, declare which enemies to use for the rounds,
 -- and the Triggerable Function definition itself.
-function hero_mode_is_boss_round(round_id)
-    return round_id % 5 == 0
+function hero_mode_is_boss_round(data)
+    return data.round_id % data.round_sets == 0
 end
 
 function hero_mode_clean_up_arena()
@@ -43,7 +43,7 @@ function hero_mode_spawn_enemies(data, difficulty)
         end
         -- Randomly decide whether a monster will spawn in this slave or not
         if crawl.one_chance_in(#sp) then
-            if hero_mode_is_boss_round(data.round_id) and not data.boss_spawned then
+            if hero_mode_is_boss_round(data) and not data.boss_spawned then
                 -- Monster set 2 is the one that contains bosses
                 local enemy = dgn.create_monster(pos.x, pos.y, data.monster_set[2])
                 if enemy == nil then
@@ -85,14 +85,14 @@ end
 -- save progress if the person completed the arena, since they will just start
 -- on round 45 if he/she re-enters it.
 function hero_mode_save_progress(data)
-    if hero_mode_is_boss_round(data.round_id) or not data.round_id == 50 then
-        current_round = math.floor(data.round_id / 5)
+    if hero_mode_is_boss_round(data) and not data.round_id == data.total_rounds then
+        current_round = math.floor(data.round_id / data.round_sets)
 
         if current_round > data.progression then
             data.progression = current_round
         end
 
-    elseif data.round_id == 50 then
+    elseif data.round_id == data.total_rounds then
         crawl.mpr("Unable to save round data.")
     end
 end
@@ -105,7 +105,7 @@ function hero_mode_end_round(data, reward_scale)
     local you_x, you_y = you.pos()
 
     -- Place award for killing boss
-    if hero_mode_is_boss_round(data.round_id) then
+    if hero_mode_is_boss_round(data) then
         crawl.mpr("A rune of Zot has appeared.", "orb")
         -- Runes are placed in the third component of monster sets
         dgn.create_item(you_x, you_y, data.monster_set[3])
@@ -135,11 +135,16 @@ function hero_mode_end_round(data, reward_scale)
 
     -- Scoring. Maybe add some interface for scoring so that players will feel more of an impact
     local style_gain = (1 + data.num_killed) * data.round_id
-    local gold_gain = 10 * data.round_id
+    local gold_gain = 0
+    if data.total_rounds <= 18 then
+        gold_gain = 20 * data.round_id
+    else
+        gold_gain = 10 * data.round_id
+    end
 
     if data.num_killed >= data.round_enemies then
         data.style_mult = data.style_mult + 1
-        if hero_mode_is_boss_round(data.round_id) then
+        if hero_mode_is_boss_round(data) then
             crawl.mpr("<yellow>Victory achieved!</yellow>", "warning")
             crawl.mpr("<yellow>You have won a prize for killing the boss.</yellow>", "warning")
             -- Some extra score multiplier for killing the boss, since
@@ -183,7 +188,7 @@ function hero_mode_end_round(data, reward_scale)
     end
     
     -- For endgame stuff
-    if data.round_id == 50 then
+    if data.round_id == data.total_rounds then
         crawl.mpr("<white>The crowd cheers loudly.</white>")
         crawl.mpr("<white>Congratulations! You are now the new Arena Champion!</white>")
         data.finished = true
@@ -212,7 +217,7 @@ end
 
 -- Set the monster sets that can be used for rounds. Lots of monsters and
 -- randomization.
-function hero_mode_get_monster_set(round, boss)
+function hero_mode_get_monster_set(round, boss, round_sets)
     if not boss then
         local mon_set = {}
         
@@ -664,8 +669,601 @@ function hero_mode_get_monster_set(round, boss)
                   mon_set[picked])
         return {mon_set[picked]}
     else
-        local which_boss = math.floor(round / 5)
+        local which_boss = math.floor(round / round_sets)
+        return dgn.persist.boss_set_2[which_boss]
+    end
+end
+
+-- Different mode where player will go through a single wave of enemies followed by a boss round.
+-- Difficulty will also be based on both enemy types and scaling.
+function hero_mode_get_monster_set_2(round, boss, round_sets, difficulty)
+    if not boss then
+        local mon_set = {}
+        
+        if round <= 5 and difficulty == "easy" then
+            mon_set = {
+                "place:D:3 / place:D:5 / w:4 sigmund / w:2 jessica / w:2 terence",
+                "goblin / hobgoblin / kobold / big kobold / ijyb w:6 / pikel w:4",
+                "rat / quokka / river rat / porcupine / w:2 hell rat / w:6 purgy",
+                "ball python / adder w:15 / water moccasin w:5",
+                "orc w:40 / orc wizard w:8 / orc priest w:5 / w:5 orc warrior / blork the orc",
+                "gnoll w:35 / hound w:5 / gnoll sergeant / gnoll shaman / crazy yiuf",
+                "lesser demon w:30 / grinder w:3 / w:2 eustachio",
+                "zombie / skeleton / wight w:5 / necrophage / phantom w:5",
+                "worker ant / soldier ant w:2 / queen ant w:1 / killer bee w:2",
+                "ooze / w:5 jelly",
+                "giant cockroach w:20 / scorpion / worm"
+        }
+        elseif round <= 5 and difficulty == "normal" then
+            mon_set = {
+                "kobold / big kobold / w:3 kobold demonologist / w:2 sonja",
+                "jackal w:1 / hound w:5 / wolf w:20 / hell hound w:7 / w:3 grum",
+                "ogre w:35 / two-headed ogre / ogre mage w:5 / w:2 erolcha",
+                "bullfrog w:20 / blink frog w:6 / spiny frog w:6 / prince ribbit w:2",
+                "gnoll / gnoll shaman / gnoll sergeant / hound / wolf"
+            }
+        elseif round <= 5 and difficulty == "hard" then
+            mon_set = {
+                "place:D:6 w:15 / place:D:10 w:15 / w:2 edmund / w:2 maurice /\
+                    w:1 psyche / w:1 joseph",
+                "w:30 place:Orc / orc wizard / orc warrior / w:3 orc knight /\
+                    orc priest / orc high priest w:1 / blork the orc w:3 / urug w:1",
+                "w:2 place:Elf / w:24 deep elf mage",
+                "place:Lair / w:5 yak / w:5 crocodile / w:3 basilisk /\
+                    w:1 death yak / river rat / hell rat / porcupine /\
+                    w:2 dream sheep",
+                "w:20 merfolk / w:5 merfolk siren / hippogriff w:15 / centaur /\
+                    w:1 harpy / w:5 cyclops / w:1 snapping turtle",
+                "w:5 bog body / w:5 tyrant leech / insubstantial wisp / w:5 swamp drake /\
+                    bullfrog / w:2 spiny frog / w:2 hydra / w:2 vampire mosquito"
+            }
+        elseif round <= 10 and difficulty == "easy" then
+            mon_set = {
+                "place:D:11 w:15 / place:D:14 w:15 / w:2 erica / w:2 harold /\
+                    w:1 rupert",
+                "w:20 place:Orc:$ / orc wizard / orc warrior / orc knight /\
+                    orc priest / orc high priest w:3 / orc sorcerer w:2 /\
+                    orc warlord w:1 / urug w:2",
+                "place:Elf",
+                "place:Lair:4 w:30 / rupert w:1",
+                "place:Shoals",
+                "place:Swamp",
+                "place:Spider",
+                "place:Snake"
+            }
+        elseif round <= 10 and difficulty == "normal" then
+            mon_set = {
+                -- Branches: D, Orc, Elf, Lair, Shoals, Swamp, Spider, Snake, Slime,
+                -- Hive, Crypt, Pan, Tomb
+                "place:D:11 w:15 / place:D:14 w:15 / w:2 erica / w:2 harold /\
+                    w:1 rupert",
+                "jelly / floating eye / w:2 shining eye /\
+                    w:2 golden eye / w:2 eye of draining / w:1 slime creature",
+                "killer bee w:15 / w:5 queen bee / w:1 oklob plant",
+                "w:3 skeletal warrior / wight / necrophage / zombie w:5 /\
+                    skeleton w:5 / flayed ghost w:5 / phantom w:5 /\
+                    shadow w:3 / silent spectre / w:4 josephine",
+                "common demon",
+                "mummy / w:5 guardian mummy / w:1 mummy priest",
+                "polar bear",
+                -- Gimmicks
+                "neqoxec",
+                "kobold name:kamikaze_kobold n_rpl n_noc n_des perm_ench:inner_flame",
+                "dwarf name:drunken n_adj n_des n_noc perm_ench:confusion",
+                "hungry ghost"
+            }
+        elseif round <= 10 and difficulty == "hard" then
+            mon_set = {
+                "fire bat / fire elemental /\
+                    w:5 sun demon / w:2 efreet / hell hound",
+                "steam dragon / air elemental / w:3 wind drake / lightning spire /\
+                    w:20 sky beast / insubstantial wisp",
+                "earth elemental w:20 / gargoyle / rust devil / iron imp /\
+                     w:5 iron troll",
+                "ice beast / rime drake / ogre simulacrum / water elemental",
+                "wraith w:20 / w:5 eidolon / phantasmal warrior / w:2 nergalle",
+                -- Misc
+                "centaur w:20 / centaur warrior w:2 / nessos w:1",
+                "ugly thing",
+                "tyrant leech / worm",
+                "ogre w:15 / two-headed ogre / ogre mage w:5 / w:1 erolcha",
+                "troll / deep troll w:12 / iron troll w:2",
+                "rime drake / swamp drake / steam dragon / swamp dragon /\
+                 acid dragon / komodo dragon",
+                "necrophage / w:2 ghoul / bog body",
+                "shapeshifter hd:7"
+            }
+        elseif round <= 15 and difficulty == "easy" then
+            mon_set = {
+                "place:D:$ w:24 / w:1 louise / w:1 donald / w:1 kirke",
+                "w:20 place:Orc:$ / orc wizard / orc sorcerer w:3 / orc warrior / orc knight /\
+                    orc warlord w:3 / orc priest / orc high priest w:4 / urug w:3",
+                "place:Elf:$",
+                "place:Lair:$ w:100 / hydra / catoblepas / dire elephant / w:5 gastronok",
+                "place:Shoals:$ w:20 / w:6 merfolk avatar / w:5 harpy"
+            }
+        elseif round <= 15 and difficulty == "normal" then
+            mon_set = {
+                "place:Swamp:$ w:20 / w:6 hydra / w:5 swamp dragon",
+                "place:Spider:$ w:20 / w:5 wolf spider / w:5 orb spider / w:2 emperor scorpion",
+                "place:Snake:$ w:20 / w:5 naga mage / w:5 naga warrior / w:5 nagaraja",
+                "place:Slime",
+                "killer bee / queen bee / w:1 oklob plant",
+                "place:Crypt / w:2 josephine",
+                "common demon w:30 / kobold demonologist w:5 / frances w:3",
+                "mummy / w:5 guardian mummy / w:2 mummy priest / w:1 sphinx",
+                "w:5 fire bat / fire elemental /\
+                    sun demon / efreet / hell hound /\
+                    hell hog / w:5 fire crab",
+                "centaur w:15 / centaur warrior w:5 / nessos w:1",
+                "w:15 ugly thing / w:1 very ugly thing",
+                "vampire mosquito / hornet",
+                "ogre mage / w:5 deep elf mage / vampire mage / naga mage",
+                "troll / deep troll / iron troll",
+                "necrophage / ghoul / bog body",
+                "shapeshifter"
+            }
+        elseif round <= 15 and difficulty == "hard" then
+            mon_set = {
+                "w:1 storm dragon / air elemental / w:5 wind drake / w:17 sky beast /\
+                    insubstantial wisp",
+                "earth elemental w:30 / rust devil / w:5 iron troll /\
+                    w:1 roxanne / w:2 iron dragon / w:3 iron elemental",
+                "ice beast w:5 / rime drake w:5 / hydra simulacrum / stone giant simulacrum /\
+                    golden dragon simulacrum / spriggan simulacrum / water elemental",
+                "wraith / eidolon / phantasmal warrior / w:2 nergalle",
+                "neqoxec",
+                "moth of wrath / w:20 two-headed ogre", "ball lightning",
+                "orb spider", "redback / sea snake w:3",
+                "hungry ghost / w:5 harpy", "shining eye",
+                "rime drake w:5 / swamp drake / swamp dragon /\
+                    acid dragon w:5 / komodo dragon w:5 / lindwurm w:5 /\
+                    fire dragon w:5 / ice dragon w:5 / storm dragon w:1"
+            }
+        elseif round <= 25 and difficulty == "easy" then
+            mon_set = {
+                -- Branches: D, Orc, Elf, Lair, Shoals, Swamp, Spider, Snake, Slime,
+                -- Hive, Crypt, Pan, Tomb
+                "place:D:$ w:24 / w:1 louise / w:1 donald / w:1 kirke",
+                "w:20 place:Orc:$ / orc wizard / orc sorcerer w:3 / orc warrior / orc knight /\
+                    orc warlord w:3 / orc priest / orc high priest w:4 / urug w:3",
+                "place:Elf:$",
+                "place:Lair:$ w:100 / hydra / catoblepas / dire elephant / w:5 gastronok",
+                "place:Shoals:$ w:20 / w:6 merfolk avatar / w:5 harpy",
+                "place:Swamp:$ w:20 / w:6 hydra / w:5 swamp dragon",
+                "place:Spider:$ w:20 / w:5 wolf spider / w:5 orb spider / w:2 emperor scorpion",
+                "place:Snake:$ w:20 / w:5 naga mage / w:5 naga warrior / w:5 nagaraja",
+                "place:Slime",
+                "killer bee / queen bee / w:1 oklob plant",
+                "place:Crypt / w:2 josephine",
+                "common demon w:30 / kobold demonologist w:5 / frances w:3",
+                "mummy / w:5 guardian mummy / w:2 mummy priest / w:1 sphinx"
+            }
+        elseif round <= 25 and difficulty == "normal" then
+            mon_set = {
+                "place:Lair:$ w:100 / hydra / catoblepas / dire elephant / w:5 gastronok",
+                "place:Shoals:$ w:20 / w:6 merfolk avatar / w:5 harpy",
+                "place:Swamp:$ w:20 / w:6 hydra / w:5 swamp dragon",
+                "place:Spider:$ w:20 / w:5 wolf spider / w:5 orb spider / w:2 emperor scorpion",
+                "place:Snake:$ w:20 / w:5 naga mage / w:5 naga warrior / w:5 nagaraja",
+                "w:5 fire bat / fire elemental /\
+                    sun demon / efreet / hell hound /\
+                    hell hog / w:5 fire crab",
+                "w:1 storm dragon / air elemental / w:5 wind drake / w:17 sky beast /\
+                    insubstantial wisp",
+                "earth elemental w:30 / rust devil / w:5 iron troll /\
+                    w:1 roxanne / w:2 iron dragon / w:3 iron elemental",
+                "ice beast w:5 / rime drake w:5 / hydra simulacrum / stone giant simulacrum /\
+                    golden dragon simulacrum / spriggan simulacrum / water elemental",
+                "wraith / eidolon / phantasmal warrior / w:2 nergalle",
+                -- Misc
+                "centaur w:15 / centaur warrior w:5 / nessos w:1",
+                "w:15 ugly thing / w:1 very ugly thing",
+                "vampire mosquito / hornet"
+            }
+        elseif round <= 25 and difficulty == "hard" then
+            mon_set = {
+                "ogre mage / w:5 deep elf mage / vampire mage / naga mage",
+                "troll / deep troll / iron troll",
+                "rime drake w:5 / swamp drake / swamp dragon /\
+                    acid dragon w:5 / komodo dragon w:5 / lindwurm w:5 /\
+                    fire dragon w:5 / ice dragon w:5 / storm dragon w:1",
+                "necrophage / ghoul / bog body",
+                "shapeshifter"
+            }
+        elseif round <= 30 and difficulty == "easy" then
+            mon_set = {
+                "place:D:$ w:30 / w:1 nikola / w:1 frederick",
+                "place:Orc:$ / orc sorcerer w:3 / orc knight / orc warlord w:3 /\
+                    iron troll w:5 / stone giant w:5 / orc high priest w:4",
+                "deep elf high priest / deep elf demonologist / deep elf annihilator /\
+                    deep elf sorcerer / deep elf death mage / deep elf blademaster /\
+                    deep elf master archer / place:Elf:$ w:200"
+            }
+        elseif round <= 30 and difficulty == "normal" then
+            mon_set = {
+                "place:Shoals:$ w:30 / merfolk javelineer / merfolk impaler /\
+                    merfolk aquamancer",
+                "place:Swamp:$ / hydra / swamp dragon / w:5 green death",
+                "place:Spider:$ / wolf spider / orb spider / w:5 emperor scorpion /\
+                    w:5 ghost moth",
+                "place:Snake:$ / naga mage / naga warrior / nagaraja /\
+                    guardian serpent / anaconda",
+                "place:Slime:$",
+                "dancing weapon",
+                "place:Forest",
+                "place:Crypt:$",
+                "common demon w:30 / greater demon w:5"
+            }
+        elseif round <= 30 and difficulty == "hard" then
+            mon_set = {
+                "hydra simulacrum / stone giant simulacrum /\
+                    golden dragon simulacrum / spriggan simulacrum / water elemental /\
+                    ice devil / merfolk aquamancer / frost giant",
+                "death cob / death yak / death drake w:5 / deep elf death mage /\
+                    death knight / death ooze / green death",
+                -- Misc
+                "ogre mage / w:5 deep elf mage / vampire mage / naga mage /\
+                    lich / w:5 ancient lich / w:1 frederick",
+                "cyclops / stone giant / w:5 frost giant / w:5 fire giant /\
+                    w:1 titan",
+                "fire dragon / ice dragon / storm dragon / w:5 shadow dragon /\
+                    w:5 golden dragon / w:1 xtahua",
+                "yak / dream sheep / death yak / apis / catoblepas",
+                "glowing shapeshifter",
+                "hell knight / w:5 necromancer / w:1 margery",
+                "wraith / wight / phantasmal warrior / skeletal warrior /\
+                    vampire / ghoul / mummy / flayed ghost / bone dragon / death cob /\
+                    profane servitor",
+                "vault guard / necromancer / hell knight / wizard /\
+                    killer klown",
+                "base draconian / w:1 nonbase draconian",
+                "golden eye / shining eye / floating eye / eye of devastation /\
+                    great orb of eyes / eye of draining / w:5 ophan",
+                "vampire / vampire knight / vampire mage / w:1 jory",
+                -- Gimmicks
+                "neqoxec", "smoke demon", "catoblepas",
+                "moth of wrath / w:20 stone giant", "ball lightning",
+                "orb spider", "hungry ghost / harpy", "shining eye",
+                "tormentor",
+                "skeletal warrior / w:5 skeletal warrior ; blowgun . needle ego:confusion"
+            }
+        elseif round <= 35 and difficulty == "easy" then
+            mon_set = {
+                "w:20 place:Orc:$ / orc sorcerer w:3 / orc knight / orc warlord w:5 /\
+                    iron troll w:5 / stone giant w:5 / orc high priest w:4 /\
+                    moth of wrath",
+                "deep elf high priest / deep elf demonologist / deep elf annihilator /\
+                    deep elf sorcerer / deep elf death mage / deep elf blademaster /\
+                    deep elf master archer / place:Elf:$ w:70",
+                "place:Shoals:$ / merfolk javelineer / merfolk impaler /\
+                    merfolk aquamancer"
+            }
+        elseif round <= 35 and difficulty == "normal" then
+            mon_set = {
+                "hydra / swamp dragon / green death / death drake",
+                "place:Spider:$ w:5 / wolf spider / orb spider / emperor scorpion /\
+                    ghost moth / moth of wrath",
+                "place:Snake:$ w:5 / naga mage / naga warrior / w:20 nagaraja /\
+                    guardian serpent / w:5 anaconda",
+                "place:Slime:$ / acid blob / azure jelly / great orb of eyes",
+                "dancing weapon",
+                "place:Forest:$ w:20 / spriggan defender / spriggan rider /\
+                spriggan air mage / spriggan druid w:3 / spriggan berserker",
+                "place:Crypt:$ w:25 / w:3 lich / w:5 vampire knight /\
+                    w:2 boris / w:2 curse skull",
+                "any demon w:30 / pandemonium lord",
+                "place:Tomb:$ w:70 / sphinx w:20 / greater mummy",
+                "place:Hell w:25 / geryon w:2 / nellie w:2"
+            }
+        elseif round <= 35 and difficulty == "hard" then
+            mon_set = {
+                "place:Dis:$ w:20 / hell sentinel / iron dragon / quicksilver dragon /\
+                    iron elemental / stone giant / iron giant",
+                "w:5 orb of fire / brimstone fiend / balrug / hellion /\
+                    fire giant / sun demon / fire vortex",
+                "place:Coc:$ w:20 / ice fiend / blizzard demon / ice devil",
+                "spriggan air mage / w:5 titan / w:5 electric golem / wind drake /\
+                    air elemental / ball lightning / storm dragon",
+                "tzitzimitl / reaper / shadow dragon / death drake /\
+                    deep elf death mage / lich w:15 / ancient lich w:5 /\
+                    death knight w:5 / place:Tar:$ w:40",
+                "daeva / angel / cherub / pearl dragon / ophan / apis",
+                "vault guard w:50 / ancient lich w:5 / lich / yaktaur /\
+                    yaktaur captain w:3 / stone giant / shadow dragon /\
+                    titan w:5"
+            }
+        elseif round <= 40 and difficulty == "easy" then
+            mon_set = {
+                "orc sorcerer / orc knight / orc warlord /\
+                    iron troll w:5 / stone giant w:5 / orc high priest /\
+                    moth of wrath",
+                "deep elf high priest / deep elf demonologist / deep elf annihilator /\
+                    deep elf sorcerer / deep elf death mage / deep elf blademaster /\
+                    deep elf master archer / place:Elf:$ w:20",
+                "place:Shoals:$ / merfolk javelineer / merfolk impaler /\
+                    merfolk aquamancer",
+                "green death / death drake",
+                "place:Spider:$ w:5 / orb spider w:5 / emperor scorpion /\
+                    ghost moth / moth of wrath",
+                "place:Snake:$ w:2 / w:40 nagaraja / guardian serpent / w:5 anaconda",
+                "place:Slime:$ / w:30 acid blob / azure jelly / floating eye /\
+                    eye of draining",
+            }
+        elseif round <= 40 and difficulty == "normal" then
+            mon_set = {
+                "dancing weapon ; bardiche",
+                "spriggan defender / spriggan air mage / spriggan druid /\
+                    spriggan berserker / spriggan rider",
+                "lich / w:5 ancient lich / w:1 curse skull / w:5 curse toe",
+                "any demon w:20 / pandemonium lord",
+                "place:Tomb:$ w:30 / sphinx w:20 / greater mummy",
+                "hellephant w:15 / w:1 nellie",
+                -- Elements/hells, Holy
+                "hell sentinel / iron dragon / quicksilver dragon /\
+                    iron elemental / stone giant / cacodemon",
+                "orb of fire / brimstone fiend / balrug / hellion /\
+                    fire giant / sun demon",
+                "place:Coc:$ w:20 / ice fiend / blizzard demon / ice devil /\
+                    white draconian"
+            }
+        elseif round <= 40 and difficulty == "hard" then
+            mon_set = {
+                "spriggan air mage / titan / electric golem / ball lightning /\
+                    storm dragon",
+                "tzitzimitl / reaper / shadow dragon / death drake /\
+                    deep elf death mage / ancient lich /\
+                    death knight w:5 / place:Tar:$ w:40",
+                "daeva / angel / cherub / pearl dragon w:20 / ophan / apis",
+                "yaktaur captain",
+                "lich / ancient lich",
+                "stone giant / w:15 frost giant / w:15 fire giant / w:15 titan",
+                "w:5 fire dragon / w:5 ice dragon / w:7 storm dragon / shadow dragon /\
+                    golden dragon / quicksilver dragon / iron dragon",
+                "glowing shapeshifter hd:20",
+                "w:5 base draconian / nonbase draconian",
+                "golden eye / shining eye / floating eye / eye of devastation /\
+                    great orb of eyes / eye of draining / w:5 ophan",
+                "w:20 hellion / hell sentinel / hell beast / hell hog / hell knight /\
+                    hell hound / hellephant / hellwing / w:2 nellie",
+                "profane servitor w:25 / angel / daeva / cherub / seraph"
+            }
+        elseif round <= 45 and difficulty == "easy" then
+            mon_set = {
+                "vault guard / ancient lich w:15 / deep elf master archer w:3 /\
+                    titan w:15 / golden dragon w:20 / glowing shapeshifter hd:20",
+                "orc sorcerer / orc warlord w:20 / stone giant w:5 /\
+                    orc high priest / moth of wrath",
+                "deep elf high priest / deep elf demonologist / deep elf annihilator /\
+                    deep elf sorcerer / deep elf blademaster w:20 /\
+                    deep elf master archer w:20",
+                "merfolk javelineer / merfolk impaler / merfolk aquamancer /\
+                    blizzard demon / ice fiend",
+                "green death / death drake w:15",
+                "orb spider / emperor scorpion / ghost moth / moth of wrath",
+                "w:40 nagaraja / guardian serpent / w:5 anaconda",
+                "w:30 acid blob / azure jelly / floating eye / eye of draining",
+            }
+        elseif round <= 45 and difficulty == "normal" then
+            mon_set = {
+                "dancing weapon ; bardiche ego:speed",
+                "spriggan air mage",
+                "w:15 ancient lich / w:6 curse toe",
+                "greater demon / pandemonium lord",
+                "sphinx w:20 / greater mummy",
+                "hellephant w:15 / w:1 nellie",
+                -- Elements/hells, Holy
+                "hell sentinel / quicksilver dragon w:20 / iron elemental / cacodemon",
+                "orb of fire w:20 / brimstone fiend / balrug / hellion w:20 /\
+                    fire giant",
+                "ice fiend / blizzard demon / ice devil /\
+                    white draconian annihilator",
+                "spriggan air mage / titan / electric golem w:20 /\
+                    storm dragon",
+                "tzitzimitl / reaper / shadow dragon / death drake /\
+                    deep elf death mage / ancient lich /\
+                    death knight w:5",
+            }
+        elseif round <= 45 and difficulty == "hard" then
+            mon_set = {
+                "deep elf master archer",
+                "ancient lich",
+                "w:5 stone giant / w:15 frost giant / w:15 fire giant / w:20 titan",
+                "w:7 storm dragon / golden dragon w:15 /\
+                    quicksilver dragon w:15 / iron dragon",
+                "glowing shapeshifter hd:20",
+                "nonbase draconian",
+                "golden eye / shining eye / floating eye w:15 / eye of devastation /\
+                    great orb of eyes / eye of draining / w:5 ophan",
+                "w:30 hellion / hell sentinel / hell beast / hell hog / hell knight /\
+                    hell hound / hellephant / w:2 nellie",
+                "profane servitor w:25 / angel w:5 / daeva / cherub w:5 / seraph w:15",
+                -- Gimmicks
+                "neqoxec", "smoke demon", "catoblepas",
+                "moth of wrath / w:20 ettin", "orb spider", "fire crab",
+                "shining eye", "tormentor",
+                "unseen horror / lorocyproca / shadow wraith / ghost moth",
+                "reaper / hell beast / geryon w:1",
+                "ghost moth / w:30 lorocyproca / eye of draining",
+                "floating eye w:5 / tentacled monstrosity",
+                "executioner / w:1 ignacio / w:5 death drake",
+                -- Just die already!
+                "daeva",
+                "greater mummy / mummy priest",
+                "air elemental name:greater n_adj perm_ench:tornado col:lightcyan",
+                "iron golem hd:20 col:magenta name:orb_golem n_rpl n_des n_spe spells:orb_of_destruction.70.natural",
+                "brimstone fiend / ice fiend / tzitzimitl w:5 / hell sentinel",
+                "titan / spriggan air mage / blizzard demon",
+                "sphinx",
+                "orb of fire / orb of fire name:orb_of_ice n_rpl n_des spells:glaciate.80.magical col:lightblue tile:mons_orb_of_ice / " ..
+                "orb of fire name:orb_of_electricity n_rpl n_des spells:chain_lightning.80.magical col:yellow tile:mons_orb_of_electricity",
+                "hellion"
+            }
+        end
+
+        local picked = crawl.random2(#mon_set) + 1
+        crawl.dpr("Picking monster set " .. picked .. " of " .. #mon_set .. ": " ..
+                  mon_set[picked])
+        return {mon_set[picked]}
+    else
+        local which_boss = math.floor(round / round_sets)
         return dgn.persist.boss_set[which_boss]
+    end
+end
+
+function hero_mode_get_monster_set_3(round, boss, round_sets, difficulty)
+    if not boss then
+    local mon_set = {}
+        
+        if round <= 7 and difficulty == "easy" then
+            mon_set = {
+                "place:D:3 / place:D:5 / w:4 sigmund / w:2 jessica / w:2 terence",
+                "goblin / hobgoblin / kobold / big kobold / ijyb w:6 / pikel w:4",
+                "rat / quokka / river rat / porcupine / w:2 hell rat / w:6 purgy",
+                "ball python / adder w:15 / water moccasin w:5",
+                "orc w:40 / orc wizard w:8 / orc priest w:5 / w:5 orc warrior / blork the orc",
+                "gnoll w:35 / hound w:5 / gnoll sergeant / gnoll shaman / crazy yiuf",
+                "lesser demon w:30 / grinder w:3 / w:2 eustachio",
+                "zombie / skeleton / wight w:5 / necrophage / phantom w:5",
+                "worker ant / soldier ant w:2 / queen ant w:1 / killer bee w:2",
+                "ooze / w:5 jelly",
+                "giant cockroach w:20 / scorpion / worm"
+        }
+        elseif round <= 7 and difficulty == "normal" then
+            mon_set = {
+                "kobold / big kobold / w:3 kobold demonologist / w:2 sonja",
+                "jackal w:1 / hound w:5 / wolf w:20 / hell hound w:7 / w:3 grum",
+                "ogre w:35 / two-headed ogre / ogre mage w:5 / w:2 erolcha",
+                "bullfrog w:20 / blink frog w:6 / spiny frog w:6 / prince ribbit w:2",
+                "gnoll / gnoll shaman / gnoll sergeant / hound / wolf"
+            }
+        elseif round <= 7 and difficulty == "hard" then
+            mon_set = {
+                "place:D:6 w:15 / place:D:10 w:15 / w:2 edmund / w:2 maurice /\
+                    w:1 psyche / w:1 joseph",
+                "w:30 place:Orc / orc wizard / orc warrior / w:3 orc knight /\
+                    orc priest / orc high priest w:1 / blork the orc w:3 / urug w:1",
+                "w:2 place:Elf / w:24 deep elf mage",
+                "place:Lair / w:5 yak / w:5 crocodile / w:3 basilisk /\
+                    w:1 death yak / river rat / hell rat / porcupine /\
+                    w:2 dream sheep",
+                "w:20 merfolk / w:5 merfolk siren / hippogriff w:15 / centaur /\
+                    w:1 harpy / w:5 cyclops / w:1 snapping turtle",
+                "w:5 bog body / w:5 tyrant leech / insubstantial wisp / w:5 swamp drake /\
+                    bullfrog / w:2 spiny frog / w:2 hydra / w:2 vampire mosquito"
+            }
+        elseif round <= 11 and difficulty == "easy" then
+            mon_set = {
+                "place:D:11 w:15 / place:D:14 w:15 / w:2 erica / w:2 harold /\
+                    w:1 rupert",
+                "w:20 place:Orc:$ / orc wizard / orc warrior / orc knight /\
+                    orc priest / orc high priest w:3 / orc sorcerer w:2 /\
+                    orc warlord w:1 / urug w:2",
+                "place:Elf",
+                "place:Lair:4 w:30 / rupert w:1",
+                "place:Shoals",
+                "place:Swamp",
+                "place:Spider",
+                "place:Snake"
+            }
+        elseif round <= 11 and difficulty == "normal" then
+            mon_set = {
+                -- Branches: D, Orc, Elf, Lair, Shoals, Swamp, Spider, Snake, Slime,
+                -- Hive, Crypt, Pan, Tomb
+                "place:D:11 w:15 / place:D:14 w:15 / w:2 erica / w:2 harold /\
+                    w:1 rupert",
+                "jelly / floating eye / w:2 shining eye /\
+                    w:2 golden eye / w:2 eye of draining / w:1 slime creature",
+                "killer bee w:15 / w:5 queen bee / w:1 oklob plant",
+                "w:3 skeletal warrior / wight / necrophage / zombie w:5 /\
+                    skeleton w:5 / flayed ghost w:5 / phantom w:5 /\
+                    shadow w:3 / silent spectre / w:4 josephine",
+                "common demon",
+                "mummy / w:5 guardian mummy / w:1 mummy priest",
+                "polar bear",
+                -- Gimmicks
+                "neqoxec",
+                "kobold name:kamikaze_kobold n_rpl n_noc n_des perm_ench:inner_flame",
+                "dwarf name:drunken n_adj n_des n_noc perm_ench:confusion",
+                "hungry ghost"
+            }
+        elseif round <= 11 and difficulty == "hard" then
+            mon_set = {
+                "fire bat / fire elemental /\
+                    w:5 sun demon / w:2 efreet / hell hound",
+                "steam dragon / air elemental / w:3 wind drake / lightning spire /\
+                    w:20 sky beast / insubstantial wisp",
+                "earth elemental w:20 / gargoyle / rust devil / iron imp /\
+                     w:5 iron troll",
+                "ice beast / rime drake / ogre simulacrum / water elemental",
+                "wraith w:20 / w:5 eidolon / phantasmal warrior / w:2 nergalle",
+                -- Misc
+                "centaur w:20 / centaur warrior w:2 / nessos w:1",
+                "ugly thing",
+                "tyrant leech / worm",
+                "ogre w:15 / two-headed ogre / ogre mage w:5 / w:1 erolcha",
+                "troll / deep troll w:12 / iron troll w:2",
+                "rime drake / swamp drake / steam dragon / swamp dragon /\
+                 acid dragon / komodo dragon",
+                "necrophage / w:2 ghoul / bog body",
+                "shapeshifter hd:7"
+            }
+        elseif round <= 17 and difficulty == "easy" then
+            mon_set = {
+                "place:D:$ w:24 / w:1 louise / w:1 donald / w:1 kirke",
+                "w:20 place:Orc:$ / orc wizard / orc sorcerer w:3 / orc warrior / orc knight /\
+                    orc warlord w:3 / orc priest / orc high priest w:4 / urug w:3",
+                "place:Elf:$",
+                "place:Lair:$ w:100 / hydra / catoblepas / dire elephant / w:5 gastronok",
+                "place:Shoals:$ w:20 / w:6 merfolk avatar / w:5 harpy"
+            }
+        elseif round <= 17 and difficulty == "normal" then
+            mon_set = {
+                "place:Swamp:$ w:20 / w:6 hydra / w:5 swamp dragon",
+                "place:Spider:$ w:20 / w:5 wolf spider / w:5 orb spider / w:2 emperor scorpion",
+                "place:Snake:$ w:20 / w:5 naga mage / w:5 naga warrior / w:5 nagaraja",
+                "place:Slime",
+                "killer bee / queen bee / w:1 oklob plant",
+                "place:Crypt / w:2 josephine",
+                "common demon w:30 / kobold demonologist w:5 / frances w:3",
+                "mummy / w:5 guardian mummy / w:2 mummy priest / w:1 sphinx",
+                "w:5 fire bat / fire elemental /\
+                    sun demon / efreet / hell hound /\
+                    hell hog / w:5 fire crab",
+                "centaur w:15 / centaur warrior w:5 / nessos w:1",
+                "w:15 ugly thing / w:1 very ugly thing",
+                "vampire mosquito / hornet",
+                "ogre mage / w:5 deep elf mage / vampire mage / naga mage",
+                "troll / deep troll / iron troll",
+                "necrophage / ghoul / bog body",
+                "shapeshifter"
+            }
+        elseif round <= 17 and difficulty == "hard" then
+            mon_set = {
+                "w:1 storm dragon / air elemental / w:5 wind drake / w:17 sky beast /\
+                    insubstantial wisp",
+                "earth elemental w:30 / rust devil / w:5 iron troll /\
+                    w:1 roxanne / w:2 iron dragon / w:3 iron elemental",
+                "ice beast w:5 / rime drake w:5 / hydra simulacrum / stone giant simulacrum /\
+                    golden dragon simulacrum / spriggan simulacrum / water elemental",
+                "wraith / eidolon / phantasmal warrior / w:2 nergalle",
+                "neqoxec",
+                "moth of wrath / w:20 two-headed ogre", "ball lightning",
+                "orb spider", "redback / sea snake w:3",
+                "hungry ghost / w:5 harpy", "shining eye",
+                "rime drake w:5 / swamp drake / swamp dragon /\
+                    acid dragon w:5 / komodo dragon w:5 / lindwurm w:5 /\
+                    fire dragon w:5 / ice dragon w:5 / storm dragon w:1"
+            }
+        end
+        
+        local picked = crawl.random2(#mon_set) + 1
+        crawl.dpr("Picking monster set " .. picked .. " of " .. #mon_set .. ": " ..
+                        mon_set[picked])
+        return {mon_set[picked]}
+    else
+        local which_boss = math.floor(round / round_sets)
+        return dgn.persist.boss_set_2[which_boss]
     end
 end
 
@@ -748,6 +1346,21 @@ function hero_mode_init_boss_table()
     return bs
 end
 
+function hero_mode_init_boss_table_2()
+    local bs = {}
+    bs[1] = {"place:Lair w:50 / centaur", "nessos hp:120", "mossy rune of zot"}
+    bs[2] = {"place:Volcano", "azrael hp:150", "fiery rune of zot"}
+    bs[3] = {"place:Orc", "saint roka hd:14 hp:200", "bone rune of zot"}
+    bs[4] = {"place:Spider", "arachne hp:240", "gossamer rune of zot"}
+    bs[5] = {"place:Vaults", "mara hp:150", "silver rune of zot"}
+    bs[6] = {"place:Snake", "vashnia hp:300", "serpentine rune of zot"}
+    bs[7] = {"place:Swamp", "the lernaean hydra hp:320", "decaying rune of zot"}
+    bs[8] = {"place:Depths", "Mennas hp:200", "glowing rune of zot"}
+    bs[9] = {"place:Dis:$", "dispater hp:300", "iron rune of zot"}
+    return bs
+end
+
+
 function hero_mode_setup_monster(difficulty, monster)
     power = monster.hd
     health = monster.hp
@@ -759,10 +1372,10 @@ function hero_mode_setup_monster(difficulty, monster)
         if power < 1 then
             power = 1
         end
-        health = math.floor(monster.hp * (3/4))
+        health = math.floor(health * (1/2))
     elseif difficulty == "hard" then
         power = math.ceil(power * (5/4))
-        health = math.ceil(health * (5/4))
+        health = math.ceil(health * (3/2))
     end
 
     monster.hd = power
@@ -775,7 +1388,7 @@ function hero_mode_setup_reward(reward_scale, gold)
     if reward_scale == 1 then
         gold = math.floor(gold / 2)
     elseif reward_scale == 3 then
-        gold = math.ceil(gold / 2)
+        gold = math.ceil(gold * 2)
     end
     return gold
 end
@@ -1007,7 +1620,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
             if data.time_left <= 0 then
                 crawl.take_note("Round " .. data.round_id .. ".")
                 crawl.mpr("ROUND " .. data.round_id .. "!", "warning")
-                if hero_mode_is_boss_round(data.round_id) then
+                if hero_mode_is_boss_round(data) then
                     crawl.mpr("BOSS ROUND!", "warning")
                 else
                     crawl.mpr("FIGHT!", "warning")
@@ -1019,7 +1632,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
                 -- Non-boss rounds will contain more enemies and the number
                 -- for these rounds will be further randomized.
                 data.round_enemies = 5 + crawl.div_rand_round(data.round_id, 3)
-                if not hero_mode_is_boss_round(data.round_id) then
+                if not hero_mode_is_boss_round(data) then
                     data.round_enemies = data.round_enemies + crawl.random2(crawl.div_rand_round(data.round_id, 3))
                 end
                 crawl.dpr("Number to spawn: " .. data.round_enemies .. ".")
@@ -1030,9 +1643,28 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
                 data.num_killed = 0
                 data.num_spawned = 0
                 data.boss_spawned = false
-                data.monster_set = hero_mode_get_monster_set(data.round_id,
-                                                   hero_mode_is_boss_round(data.round_id))
 
+                data.monster_set = hero_mode_get_monster_set(data.round_id,
+                                                        hero_mode_is_boss_round(data),
+                                                        data.round_sets)
+
+                --if not data.scaling_enabled data.total_rounds == 45 then
+                --    data.monster_set = hero_mode_get_monster_set(data.round_id,
+                --                                        hero_mode_is_boss_round(data),
+                --                                        data.round_sets)
+                --elseif data.scaling_enabled and data.total_rounds == 45 then
+                --    difficulty = hero_mode_retrieve_round_values(data)[1]
+                --    data.monster_set = hero_mode_get_monster_set_2(data.round_id,
+                --                                        hero_mode_is_boss_round(data),
+                --                                        data.round_sets,
+                --                                        difficulty)
+                --else
+                --    difficulty = hero_mode_retrieve_round_values(data)[1]
+                --    data.monster_set = hero_mode_get_monster_set_3(data.round_id,
+                --                                        hero_mode_is_boss_round(data),
+                --                                        data.round_sets,
+                --                                        difficulty)
+                --end
                 -- 50% chance of picking a specific direction to spawn from, else
                 -- spawn from all four directions
                 if crawl.coinflip() then
@@ -1079,7 +1711,7 @@ function hero_mode_manage_arena(data, triggerable, triggerer, marker, ev)
 
             if data.time_left <= 0 then
                 if data.scaling_enabled then
-                    local reward_scale = hero_mode_retrieve_round_values[2]
+                    local reward_scale = hero_mode_retrieve_round_values(data)[2]
                     hero_mode_end_round(data, reward_scale)
                 else
                     hero_mode_end_round(data, 2)
@@ -1582,7 +2214,11 @@ TILE: a = wall_brick_brown
             difficulties = {"easy", "normal", "hard"},
             reward_values = {1, 2, 3},
             scaling_enabled = false,         -- whether we want to begin scaling difficulty and rewards
-            toggle_scaling = false
+            toggle_scaling = false,
+            round_sets = 5,         -- The number of rounds in a set of rounds
+            total_rounds = 45,       -- total number of rounds
+            mode = "casual"        -- Determines the length of the arena. This will not necessarily be easier,
+                                   -- but it should be significantly shorter.
         },
         repeated = true
     }
@@ -1725,6 +2361,7 @@ TILE: a = wall_brick_brown
     })
 
     dgn.persist.boss_set = hero_mode_init_boss_table()
+    dgn.persist.boss_set_2 = hero_mode_init_boss_table_2()
 
     -- Store this in dgn.persist rather than arena_marker.data because
     -- this allows the function "hero_mode_calculate_score" to access it
@@ -2597,6 +3234,8 @@ FTILE: F = floor_pebble_brown
 KITEM: G = never_decay goblin; nothing skeleton
 KITEM: H = never_decay bat skeleton
 FTILE: GH = floor_pebble_brown
+KITEM: $ = gold q:200
+FTILE: $ = cottage_floor
 FTILE: ABCDE = tutorial_pad
 MARKER: A = lua:tutorial6.msg("necromancy_4")
 MARKER: B = lua:tutorial6.msg("necromancy_5")
@@ -2607,7 +3246,7 @@ MARKER: E = lua:tutorial6.msg("conclusion")
 
 MAP
 xxxxxxxxxxxxxxx
-xaaaa...wwwwxxx
+xaa$a...wwwwxxx
 xmaaaaE..wwwxxx
 xla1aaa...xxxxx
 xaaaaaa...b.xxx

@@ -742,6 +742,7 @@ static void restore_life_hero_mode()
         set_hp(you.hp_max);
     if (you.duration[DUR_POISONING])
         you.redraw_hit_points = true;
+    set_mp(you.max_magic_points);
     you.duration[DUR_POISONING] = 0;
     you.disease = 0;
     you.duration[DUR_CONF] = 0;
@@ -1195,6 +1196,8 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
             }
             if (spawn_point_found)
             {
+                // So that we can place uniques again upon player death
+                you.unique_creatures.reset();
                 move_player_to_graveyard(spawn_point_pos, true);
                 restore_life_hero_mode();
                 return;

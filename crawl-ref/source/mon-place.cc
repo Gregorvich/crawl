@@ -798,8 +798,8 @@ monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
 
         // We don't want to place a unique that has already been
         // generated.
-        if (mons_is_unique(band_template.cls)
-            && you.unique_creatures[band_template.cls])
+        if ((mons_is_unique(band_template.cls)
+            && you.unique_creatures[band_template.cls]) && !crawl_state.game_is_hero_mode())
         {
             continue;
         }
@@ -874,7 +874,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
 
     // Some sanity checks.
     if (mons_is_unique(mg.cls) && you.unique_creatures[mg.cls]
-            && !crawl_state.game_is_arena()
+            && !crawl_state.game_is_arena() && !crawl_state.game_is_hero_mode()
         || mons_class_flag(mg.cls, M_CANT_SPAWN))
     {
         die("invalid monster to place: %s (%d)", mons_class_name(mg.cls), mg.cls);
